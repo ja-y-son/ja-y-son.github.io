@@ -1,0 +1,13 @@
+{
+  "name": "rto-planner",
+  "version": "1.0.0",
+  "description": "A web-based tool to help plan your return-to-office schedule",
+  "scripts": {
+    "build": "esbuild js/app.js --bundle --outfile=js/app.bundle.js --format=iife",
+    "watch": "esbuild js/app.js --bundle --outfile=js/app.bundle.js --format=iife --watch",
+    "serve": "python -m http.server 8080"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0"
+  }
+}

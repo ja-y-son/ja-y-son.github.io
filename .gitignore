@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build output (uncomment if you don't want to commit the bundle)
+# js/app.bundle.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*

@@ -33,12 +33,12 @@ Microsoft's RTO policy uses a rolling 12-week window to calculate compliance:
 - Vanilla JavaScript (ES6+)
 - Web Components for reusable UI
 - No build step required
+- No server required - works by opening index.html directly
 - Session storage for state persistence
 
 ## Browser Support
 
 Works in all modern browsers that support:
-- ES6 Modules
 - Custom Elements (Web Components)
 - CSS Custom Properties
 
@@ -47,12 +47,14 @@ Works in all modern browsers that support:
 ```
 rto-plan/
 ├── index.html          # Main entry point
+├── package.json        # Build scripts
 ├── css/
 │   ├── main.css        # Global styles
 │   ├── calendar.css    # Calendar styles
 │   └── components.css  # Component styles
 ├── js/
 │   ├── app.js          # Application entry
+│   ├── app.bundle.js   # Built output (generated)
 │   ├── state/
 │   │   └── store.js    # State management
 │   ├── utils/
@@ -71,7 +73,24 @@ rto-plan/
 
 ## Development
 
-No build step required! Just serve the files with any static file server:
+### First-time setup
+```bash
+npm install
+```
+
+### Build for deployment
+```bash
+npm run build
+```
+
+### Watch mode (auto-rebuild on changes)
+```bash
+npm run watch
+```
+
+Then just open `index.html` in your browser - no server required!
+
+### Optional: Local server with auto-reload
 
 ```bash
 # Using Python
