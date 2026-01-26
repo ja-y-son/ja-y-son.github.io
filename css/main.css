@@ -116,6 +116,22 @@ body {
     font-weight: 600;
 }
 
+.feedback-link {
+    margin-left: auto;
+    color: var(--color-white);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    background: rgba(255,255,255,0.15);
+    transition: background 0.15s ease;
+}
+
+.feedback-link:hover {
+    background: rgba(255,255,255,0.25);
+}
+
 .app-main {
     flex: 1;
     display: flex;
