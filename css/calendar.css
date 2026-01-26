@@ -1,0 +1,254 @@
+/* ================================
+   Calendar View Container
+   ================================ */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ================================
+   Month Calendar
+   ================================ */
+.month-calendar {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.month-header {
+    background: var(--color-gray-20);
+    padding: var(--spacing-md);
+    text-align: center;
+    font-weight: 600;
+    font-size: var(--font-size-lg);
+    color: var(--color-gray-150);
+    border-bottom: 1px solid var(--color-gray-30);
+}
+
+.weekday-headers {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--color-gray-10);
+    border-bottom: 1px solid var(--color-gray-30);
+}
+
+.weekday-header {
+    padding: var(--spacing-sm);
+    text-align: center;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-gray-130);
+}
+
+.weekday-header.weekend {
+    color: var(--color-gray-90);
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: var(--color-gray-30);
+    padding: 1px;
+}
+
+/* ================================
+   Day Cell
+   ================================ */
+.day-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-white);
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+    min-height: 40px;
+}
+
+.day-cell:hover:not(.disabled):not(.empty) {
+    background: var(--color-gray-20);
+}
+
+/* Empty cells (padding for month start) */
+.day-cell.empty {
+    background: var(--color-gray-10);
+    cursor: default;
+}
+
+/* Weekend days */
+.day-cell.weekend {
+    background: var(--color-gray-20);
+    color: var(--color-gray-90);
+    cursor: not-allowed;
+}
+
+.day-cell.weekend::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 3px,
+        var(--color-gray-30) 3px,
+        var(--color-gray-30) 4px
+    );
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* Selected state (going to office) */
+.day-cell.selected {
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-weight: 600;
+}
+
+.day-cell.selected:hover {
+    background: var(--color-primary-hover);
+}
+
+/* Pending add state */
+.day-cell.pending-add {
+    background: var(--color-success-light);
+    color: var(--color-success);
+    font-weight: 600;
+    border: 2px dashed var(--color-success);
+}
+
+/* Pending remove state */
+.day-cell.pending-remove {
+    background: var(--color-error-light);
+    color: var(--color-error);
+    text-decoration: line-through;
+    border: 2px dashed var(--color-error);
+}
+
+/* Today indicator */
+.day-cell.today::before {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: var(--color-primary);
+    border-radius: 50%;
+}
+
+.day-cell.selected.today::before {
+    background: var(--color-white);
+}
+
+/* ================================
+   Calendar Legend
+   ================================ */
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-150);
+}
+
+.legend-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-40);
+}
+
+.legend-swatch.selected {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.legend-swatch.unselected {
+    background: var(--color-white);
+}
+
+.legend-swatch.pending-add {
+    background: var(--color-success-light);
+    border: 2px dashed var(--color-success);
+}
+
+.legend-swatch.pending-remove {
+    background: var(--color-error-light);
+    border: 2px dashed var(--color-error);
+}
+
+.legend-swatch.weekend {
+    background: var(--color-gray-20);
+    position: relative;
+    overflow: hidden;
+}
+
+.legend-swatch.weekend::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        var(--color-gray-40) 2px,
+        var(--color-gray-40) 3px
+    );
+}
+
+/* ================================
+   Month Transitions
+   ================================ */
+.month-calendar {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Stagger animation for months */
+.month-calendar:nth-child(1) { animation-delay: 0ms; }
+.month-calendar:nth-child(2) { animation-delay: 30ms; }
+.month-calendar:nth-child(3) { animation-delay: 60ms; }
+.month-calendar:nth-child(4) { animation-delay: 90ms; }
+.month-calendar:nth-child(5) { animation-delay: 120ms; }
+.month-calendar:nth-child(6) { animation-delay: 150ms; }
+.month-calendar:nth-child(7) { animation-delay: 180ms; }
+.month-calendar:nth-child(8) { animation-delay: 210ms; }
+.month-calendar:nth-child(9) { animation-delay: 240ms; }
+.month-calendar:nth-child(10) { animation-delay: 270ms; }
+.month-calendar:nth-child(11) { animation-delay: 300ms; }
+.month-calendar:nth-child(12) { animation-delay: 330ms; }

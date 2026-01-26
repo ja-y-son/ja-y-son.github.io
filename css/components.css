@@ -1,0 +1,346 @@
+/* ================================
+   Setup Form Component
+   ================================ */
+setup-form {
+    display: block;
+    width: 100%;
+    max-width: 500px;
+}
+
+.setup-card {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--spacing-xl);
+}
+
+.setup-title {
+    font-size: var(--font-size-xxl);
+    font-weight: 600;
+    color: var(--color-gray-190);
+    margin-bottom: var(--spacing-sm);
+}
+
+.setup-subtitle {
+    font-size: var(--font-size-base);
+    color: var(--color-gray-130);
+    margin-bottom: var(--spacing-xl);
+}
+
+.setup-form .form-group {
+    margin-bottom: var(--spacing-xl);
+}
+
+.day-checkbox-group {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.day-checkbox {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md);
+    background: var(--color-white);
+    border: 2px solid var(--color-gray-40);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.day-checkbox:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
+.day-checkbox.checked {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.day-checkbox input {
+    display: none;
+}
+
+.day-checkbox .day-abbr {
+    font-weight: 600;
+    font-size: var(--font-size-lg);
+}
+
+.day-checkbox .day-full {
+    font-size: var(--font-size-sm);
+    opacity: 0.8;
+}
+
+.required-days-input {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.required-days-input .number-input {
+    width: 100px;
+    font-size: var(--font-size-xl);
+}
+
+.required-days-input .input-suffix {
+    color: var(--color-gray-130);
+}
+
+.setup-submit {
+    width: 100%;
+    margin-top: var(--spacing-lg);
+}
+
+/* ================================
+   Sidebar Panel Component
+   ================================ */
+sidebar-panel {
+    display: block;
+    height: 100%;
+}
+
+.sidebar-content {
+    padding: var(--spacing-lg);
+}
+
+.sidebar-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.sidebar-section-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-gray-130);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-gray-30);
+}
+
+/* Settings Display */
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.setting-label {
+    color: var(--color-gray-130);
+    font-size: var(--font-size-sm);
+}
+
+.setting-value {
+    font-weight: 600;
+    color: var(--color-gray-190);
+}
+
+/* Compliance Status */
+.compliance-status {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.compliance-status.compliant {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.compliance-status.non-compliant {
+    background: var(--color-error-light);
+    color: var(--color-error);
+}
+
+.compliance-icon {
+    font-size: var(--font-size-xl);
+}
+
+.compliance-text {
+    font-weight: 600;
+}
+
+/* Non-compliant Windows List */
+.windows-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.window-item {
+    padding: var(--spacing-md);
+    background: var(--color-error-light);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-error);
+}
+
+.window-dates {
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-190);
+    margin-bottom: var(--spacing-xs);
+}
+
+.window-details {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-150);
+}
+
+.window-result {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--spacing-xs);
+}
+
+.window-result .result-value {
+    font-weight: 600;
+    color: var(--color-error);
+}
+
+/* Stats Display */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.stat-card {
+    padding: var(--spacing-md);
+    background: var(--color-gray-10);
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.stat-value {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.stat-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-130);
+    margin-top: var(--spacing-xs);
+}
+
+/* ================================
+   Action Bar Component
+   ================================ */
+action-bar {
+    display: block;
+    height: 100%;
+}
+
+.action-bar-content {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--spacing-lg);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.pending-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--color-gray-130);
+    font-size: var(--font-size-sm);
+}
+
+.pending-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 var(--spacing-xs);
+    background: var(--color-warning);
+    color: var(--color-gray-190);
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.pending-indicator.hidden {
+    visibility: hidden;
+}
+
+/* ================================
+   Calendar View Component
+   ================================ */
+calendar-view {
+    display: block;
+}
+
+/* ================================
+   Month Calendar Component
+   ================================ */
+month-calendar {
+    display: block;
+}
+
+/* ================================
+   Day Cell Component
+   ================================ */
+day-cell {
+    display: block;
+}
+
+/* ================================
+   Loading State
+   ================================ */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-gray-40);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ================================
+   Empty State
+   ================================ */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--color-gray-130);
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+.empty-state-text {
+    font-size: var(--font-size-base);
+}

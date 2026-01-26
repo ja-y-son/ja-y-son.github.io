@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RTO Planner - Return to Office Schedule</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/calendar.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <h1>RTO Planner</h1>
+            <span class="year-badge" id="yearBadge">2026</span>
+        </header>
+        
+        <main class="app-main">
+            <!-- Setup Form (shown initially) -->
+            <section id="setupSection" class="setup-section">
+                <setup-form></setup-form>
+            </section>
+            
+            <!-- Main Planner (hidden until setup complete) -->
+            <section id="plannerSection" class="planner-section hidden">
+                <div class="planner-layout">
+                    <div class="calendar-container">
+                        <calendar-view></calendar-view>
+                    </div>
+                    <aside class="sidebar-container">
+                        <sidebar-panel></sidebar-panel>
+                    </aside>
+                </div>
+                <footer class="action-footer">
+                    <action-bar></action-bar>
+                </footer>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Load modules -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
