@@ -183,6 +183,36 @@
     window.__RTO_STORE__ = store;
   }
 
+  // js/config/holidays.js
+  var HOLIDAYS = {
+    2026: {
+      "2026-01-01": "New Year's Day",
+      "2026-01-19": "Martin Luther King Day",
+      "2026-02-16": "Presidents Day",
+      "2026-05-25": "Memorial Day",
+      "2026-07-03": "Independence Day",
+      "2026-09-07": "Labor Day",
+      "2026-11-26": "Thanksgiving Day",
+      "2026-11-27": "Day after Thanksgiving",
+      "2026-12-24": "Christmas Eve",
+      "2026-12-25": "Christmas Day"
+    }
+  };
+  function isHoliday(isoDateString) {
+    const year = parseInt(isoDateString.slice(0, 4), 10);
+    const yearHolidays = HOLIDAYS[year];
+    return yearHolidays ? isoDateString in yearHolidays : false;
+  }
+  function getHolidayName(isoDateString) {
+    const year = parseInt(isoDateString.slice(0, 4), 10);
+    const yearHolidays = HOLIDAYS[year];
+    return yearHolidays ? yearHolidays[isoDateString] || null : null;
+  }
+  function getHolidayList(year) {
+    const yearHolidays = HOLIDAYS[year] || {};
+    return Object.entries(yearHolidays).map(([date, name]) => ({ date, name })).sort((a, b) => a.date.localeCompare(b.date));
+  }
+
   // js/utils/date-utils.js
   var DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   var DAY_ABBRS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -294,8 +324,9 @@
     const daysSet = new Set(daysOfWeek);
     while (date.getFullYear() === year) {
       const weekday = jsDateDayToWeekday(date.getDay());
-      if (daysSet.has(weekday)) {
-        dates.push(toISODateString(date));
+      const isoStr = toISODateString(date);
+      if (daysSet.has(weekday) && !isHoliday(isoStr)) {
+        dates.push(isoStr);
       }
       date.setDate(date.getDate() + 1);
     }
@@ -615,9 +646,15 @@
         return;
       const date = /* @__PURE__ */ new Date(this.date + "T00:00:00");
       cell.className = "day-cell";
+      cell.title = "";
       if (isWeekend(date)) {
         cell.classList.add("weekend", "disabled");
         return;
+      }
+      if (isHoliday(this.date)) {
+        cell.classList.add("holiday");
+        const holidayName = getHolidayName(this.date);
+        cell.title = `${holidayName} \u2014 Company holiday (unchecked by default)`;
       }
       if (isToday(this.date)) {
         cell.classList.add("today");
@@ -852,7 +889,7 @@
     }
     _render() {
       const state = store.getState();
-      const { defaultOfficeDays, requiredDays, complianceResults } = state;
+      const { defaultOfficeDays, requiredDays, complianceResults, year } = state;
       const daysDisplay = defaultOfficeDays.map((d) => DAY_ABBRS[d]).join(", ") || "None selected";
       this.innerHTML = `
             <div class="sidebar-content">
@@ -870,6 +907,9 @@
                         </div>
                     </div>
                 </section>
+                
+                <!-- Holidays Section -->
+                ${this._renderHolidays(year)}
                 
                 <!-- Compliance Section -->
                 <section class="sidebar-section">
@@ -956,6 +996,34 @@
                         <div class="stat-value">${averagePerWeek}</div>
                         <div class="stat-label">Avg Days/Week</div>
                     </div>
+                </div>
+            </section>
+        `;
+    }
+    _renderHolidays(year) {
+      const holidays = getHolidayList(year);
+      if (holidays.length === 0) {
+        return "";
+      }
+      const formatHolidayDate = (isoDate) => {
+        const [y, m, d] = isoDate.split("-").map(Number);
+        const date = new Date(y, m - 1, d);
+        const month = MONTH_NAMES[date.getMonth()].slice(0, 3);
+        return `${month} ${d}`;
+      };
+      return `
+            <section class="sidebar-section holidays-section">
+                <h3 class="sidebar-section-title">
+                    Company Holidays
+                    <span class="holiday-count">${holidays.length}</span>
+                </h3>
+                <div class="holidays-list">
+                    ${holidays.map((h) => `
+                        <div class="holiday-item">
+                            <span class="holiday-date">${formatHolidayDate(h.date)}</span>
+                            <span class="holiday-name">${h.name}</span>
+                        </div>
+                    `).join("")}
                 </div>
             </section>
         `;

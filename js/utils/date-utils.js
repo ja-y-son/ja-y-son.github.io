@@ -5,6 +5,8 @@
  * and calendar generation.
  */
 
+import { isHoliday } from '../config/holidays.js';
+
 // Day of week constants (0 = Monday, matching our internal representation)
 export const WEEKDAYS = {
     MONDAY: 0,
@@ -271,6 +273,7 @@ export function getWeekdaysInYear(year) {
 
 /**
  * Generate default office dates for a year based on selected days of week
+ * Company holidays are unchecked by default (but still count toward RTO if selected)
  * @param {number} year 
  * @param {number[]} daysOfWeek - Array of weekdays (0=Monday, 4=Friday)
  * @returns {string[]} Array of ISO date strings
@@ -282,8 +285,10 @@ export function generateDefaultOfficeDates(year, daysOfWeek) {
     
     while (date.getFullYear() === year) {
         const weekday = jsDateDayToWeekday(date.getDay());
-        if (daysSet.has(weekday)) {
-            dates.push(toISODateString(date));
+        const isoStr = toISODateString(date);
+        // Include if it's a selected weekday AND not a holiday
+        if (daysSet.has(weekday) && !isHoliday(isoStr)) {
+            dates.push(isoStr);
         }
         date.setDate(date.getDate() + 1);
     }

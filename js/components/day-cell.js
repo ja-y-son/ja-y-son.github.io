@@ -5,7 +5,8 @@
  * Handles click interactions and visual states.
  */
 
-import { isWeekend, isToday, toISODateString } from '../utils/date-utils.js';
+import { isWeekend, isToday } from '../utils/date-utils.js';
+import { isHoliday, getHolidayName } from '../config/holidays.js';
 
 export class DayCell extends HTMLElement {
     static get observedAttributes() {
@@ -108,13 +109,21 @@ export class DayCell extends HTMLElement {
         
         const date = new Date(this.date + 'T00:00:00');
         
-        // Reset classes
+        // Reset classes and title
         cell.className = 'day-cell';
+        cell.title = '';
         
         // Check if weekend
         if (isWeekend(date)) {
             cell.classList.add('weekend', 'disabled');
             return;
+        }
+        
+        // Check if holiday (still selectable, just defaults to unchecked)
+        if (isHoliday(this.date)) {
+            cell.classList.add('holiday');
+            const holidayName = getHolidayName(this.date);
+            cell.title = `${holidayName} — Company holiday (unchecked by default)`;
         }
         
         // Check if today
@@ -142,6 +151,7 @@ export class DayCell extends HTMLElement {
             if (!dateStr) return;
             
             const date = new Date(dateStr + 'T00:00:00');
+            // Prevent clicking on weekends or disabled days (holidays ARE clickable)
             if (isWeekend(date) || this.disabled) return;
             
             this.dispatchEvent(new CustomEvent('day-toggle', {

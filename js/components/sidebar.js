@@ -3,14 +3,16 @@
  * 
  * Displays:
  * - Current settings (default days, required days)
+ * - Company holidays
  * - Compliance status
  * - Non-compliant windows details
  * - Statistics
  */
 
 import { store } from '../state/store.js';
-import { DAY_ABBRS } from '../utils/date-utils.js';
+import { DAY_ABBRS, MONTH_NAMES } from '../utils/date-utils.js';
 import { formatWindowForDisplay } from '../utils/compliance.js';
+import { getHolidayList } from '../config/holidays.js';
 
 export class SidebarPanel extends HTMLElement {
     constructor() {
@@ -35,7 +37,7 @@ export class SidebarPanel extends HTMLElement {
     
     _render() {
         const state = store.getState();
-        const { defaultOfficeDays, requiredDays, complianceResults } = state;
+        const { defaultOfficeDays, requiredDays, complianceResults, year } = state;
         
         // Format default days for display
         const daysDisplay = defaultOfficeDays
@@ -58,6 +60,9 @@ export class SidebarPanel extends HTMLElement {
                         </div>
                     </div>
                 </section>
+                
+                <!-- Holidays Section -->
+                ${this._renderHolidays(year)}
                 
                 <!-- Compliance Section -->
                 <section class="sidebar-section">
@@ -154,6 +159,38 @@ export class SidebarPanel extends HTMLElement {
                         <div class="stat-value">${averagePerWeek}</div>
                         <div class="stat-label">Avg Days/Week</div>
                     </div>
+                </div>
+            </section>
+        `;
+    }
+    
+    _renderHolidays(year) {
+        const holidays = getHolidayList(year);
+        
+        if (holidays.length === 0) {
+            return '';
+        }
+        
+        const formatHolidayDate = (isoDate) => {
+            const [y, m, d] = isoDate.split('-').map(Number);
+            const date = new Date(y, m - 1, d);
+            const month = MONTH_NAMES[date.getMonth()].slice(0, 3);
+            return `${month} ${d}`;
+        };
+        
+        return `
+            <section class="sidebar-section holidays-section">
+                <h3 class="sidebar-section-title">
+                    Company Holidays
+                    <span class="holiday-count">${holidays.length}</span>
+                </h3>
+                <div class="holidays-list">
+                    ${holidays.map(h => `
+                        <div class="holiday-item">
+                            <span class="holiday-date">${formatHolidayDate(h.date)}</span>
+                            <span class="holiday-name">${h.name}</span>
+                        </div>
+                    `).join('')}
                 </div>
             </section>
         `;

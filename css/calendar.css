@@ -107,6 +107,58 @@
     pointer-events: none;
 }
 
+/* Holiday days (clickable, but unchecked by default) */
+.day-cell.holiday {
+    background: var(--color-warning-light, #fff8e6);
+    color: var(--color-warning, #b86e00);
+    cursor: pointer;
+}
+
+.day-cell.holiday::after {
+    content: '★';
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    font-size: 8px;
+    color: var(--color-warning, #b86e00);
+    opacity: 0.7;
+}
+
+.day-cell.holiday:hover {
+    background: #fff0cc;
+}
+
+/* Holiday + selected state */
+.day-cell.holiday.selected {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+.day-cell.holiday.selected::after {
+    color: var(--color-white);
+    opacity: 0.9;
+}
+
+/* Holiday + pending-add state */
+.day-cell.holiday.pending-add {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.day-cell.holiday.pending-add::after {
+    color: var(--color-success);
+}
+
+/* Holiday + pending-remove state */
+.day-cell.holiday.pending-remove {
+    background: var(--color-error-light);
+    color: var(--color-error);
+}
+
+.day-cell.holiday.pending-remove::after {
+    color: var(--color-error);
+}
+
 /* Selected state (going to office) */
 .day-cell.selected {
     background: var(--color-primary);

@@ -238,6 +238,53 @@ sidebar-panel {
     margin-top: var(--spacing-xs);
 }
 
+/* Holidays Display */
+.holidays-section .sidebar-section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.holiday-count {
+    background: var(--color-warning-light, #fff8e6);
+    color: var(--color-warning, #b86e00);
+    font-size: var(--font-size-xs);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}
+
+.holidays-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.holiday-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-gray-10);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+}
+
+.holiday-date {
+    font-weight: 600;
+    color: var(--color-warning, #b86e00);
+    min-width: 50px;
+}
+
+.holiday-name {
+    color: var(--color-gray-150);
+    text-align: right;
+    flex: 1;
+    margin-left: var(--spacing-sm);
+}
+
 /* ================================
    Action Bar Component
    ================================ */
