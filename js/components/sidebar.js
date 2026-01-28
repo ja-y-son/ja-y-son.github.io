@@ -9,7 +9,7 @@
  */
 
 import { store } from '../state/store.js';
-import { DAY_ABBRS } from '../utils/date-utils.js';
+import { WEEKDAY_ABBRS } from '../utils/date-utils.js';
 import { formatWindowForDisplay } from '../utils/compliance.js';
 
 export class SidebarPanel extends HTMLElement {
@@ -39,7 +39,7 @@ export class SidebarPanel extends HTMLElement {
         
         // Format default days for display
         const daysDisplay = defaultOfficeDays
-            .map(d => DAY_ABBRS[d])
+            .map(d => WEEKDAY_ABBRS[d])
             .join(', ') || 'None selected';
         
         this.innerHTML = `

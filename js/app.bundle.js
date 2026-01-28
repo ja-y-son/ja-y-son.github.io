@@ -184,8 +184,9 @@
   }
 
   // js/utils/date-utils.js
-  var DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  var DAY_ABBRS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  var DAY_ABBRS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  var WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  var WEEKDAY_ABBRS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
   var MONTH_NAMES = [
     "January",
     "February",
@@ -275,8 +276,7 @@
     const grid = [];
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    let firstDayOfWeek = firstDay.getDay();
-    firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+    const firstDayOfWeek = firstDay.getDay();
     for (let i = 0; i < firstDayOfWeek; i++) {
       grid.push(null);
     }
@@ -483,8 +483,8 @@
         dayEl.className = `day-checkbox${isChecked ? " checked" : ""}`;
         dayEl.innerHTML = `
                 <input type="checkbox" name="day" value="${i}" ${isChecked ? "checked" : ""}>
-                <span class="day-abbr">${DAY_ABBRS[i]}</span>
-                <span class="day-full">${DAY_NAMES[i]}</span>
+                <span class="day-abbr">${WEEKDAY_ABBRS[i]}</span>
+                <span class="day-full">${WEEKDAY_NAMES[i]}</span>
             `;
         container.appendChild(dayEl);
       }
@@ -703,7 +703,7 @@
                 <div class="month-header">${monthName} ${year}</div>
                 <div class="weekday-headers">
                     ${DAY_ABBRS.map((day, i) => `
-                        <div class="weekday-header${i >= 5 ? " weekend" : ""}">${day}</div>
+                        <div class="weekday-header${i === 0 || i === 6 ? " weekend" : ""}">${day}</div>
                     `).join("")}
                 </div>
                 <div class="days-grid" id="daysGrid">
@@ -853,7 +853,7 @@
     _render() {
       const state = store.getState();
       const { defaultOfficeDays, requiredDays, complianceResults } = state;
-      const daysDisplay = defaultOfficeDays.map((d) => DAY_ABBRS[d]).join(", ") || "None selected";
+      const daysDisplay = defaultOfficeDays.map((d) => WEEKDAY_ABBRS[d]).join(", ") || "None selected";
       this.innerHTML = `
             <div class="sidebar-content">
                 <!-- Settings Section -->

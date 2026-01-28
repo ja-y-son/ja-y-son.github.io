@@ -5,7 +5,7 @@
  * and calendar generation.
  */
 
-// Day of week constants (0 = Monday, matching our internal representation)
+// Day of week constants (0 = Monday, matching our internal representation for business logic)
 export const WEEKDAYS = {
     MONDAY: 0,
     TUESDAY: 1,
@@ -16,10 +16,14 @@ export const WEEKDAYS = {
     SUNDAY: 6
 };
 
-// Day names
-export const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-export const DAY_ABBRS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-export const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+// Day names for calendar display (Sunday first)
+export const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+export const DAY_ABBRS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+// Day names for weekday selection (Monday-Friday only, internal index 0-4)
+export const WEEKDAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+export const WEEKDAY_ABBRS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
 // Month names
 export const MONTH_NAMES = [
@@ -228,9 +232,8 @@ export function getMonthCalendarGrid(year, month) {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     
-    // Get day of week for first day (convert to Monday=0 format)
-    let firstDayOfWeek = firstDay.getDay();
-    firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+    // Get day of week for first day (Sunday=0 format, which is JS default)
+    const firstDayOfWeek = firstDay.getDay();
     
     // Add empty cells for days before the first of the month
     for (let i = 0; i < firstDayOfWeek; i++) {

@@ -75,7 +75,7 @@ export class MonthCalendar extends HTMLElement {
                 <div class="month-header">${monthName} ${year}</div>
                 <div class="weekday-headers">
                     ${DAY_ABBRS.map((day, i) => `
-                        <div class="weekday-header${i >= 5 ? ' weekend' : ''}">${day}</div>
+                        <div class="weekday-header${i === 0 || i === 6 ? ' weekend' : ''}">${day}</div>
                     `).join('')}
                 </div>
                 <div class="days-grid" id="daysGrid">

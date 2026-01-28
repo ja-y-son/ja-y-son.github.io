@@ -6,7 +6,7 @@
  * - How many days per week their org requires
  */
 
-import { DAY_NAMES, DAY_ABBRS } from '../utils/date-utils.js';
+import { WEEKDAY_NAMES, WEEKDAY_ABBRS } from '../utils/date-utils.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -78,8 +78,8 @@ export class SetupForm extends HTMLElement {
             dayEl.className = `day-checkbox${isChecked ? ' checked' : ''}`;
             dayEl.innerHTML = `
                 <input type="checkbox" name="day" value="${i}" ${isChecked ? 'checked' : ''}>
-                <span class="day-abbr">${DAY_ABBRS[i]}</span>
-                <span class="day-full">${DAY_NAMES[i]}</span>
+                <span class="day-abbr">${WEEKDAY_ABBRS[i]}</span>
+                <span class="day-full">${WEEKDAY_NAMES[i]}</span>
             `;
             container.appendChild(dayEl);
         }
