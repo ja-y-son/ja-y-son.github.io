@@ -58,6 +58,10 @@ export class CalendarView extends HTMLElement {
                     <div class="legend-swatch weekend"></div>
                     <span>Weekend</span>
                 </div>
+                <div class="legend-item">
+                    <div class="legend-swatch in-window"></div>
+                    <span>Selected window</span>
+                </div>
             </div>
             <div class="calendar-grid" id="calendarGrid">
                 ${this._renderMonths(year)}
@@ -101,9 +105,21 @@ export class CalendarView extends HTMLElement {
         const confirmedDates = new Set(state.confirmedDates);
         const pendingDates = new Set(state.pendingDates);
         
+        // Get selected window date range if any
+        let windowStartDate = null;
+        let windowEndDate = null;
+        
+        if (state.selectedWindowIndex !== null && 
+            state.complianceResults && 
+            state.complianceResults.windows[state.selectedWindowIndex]) {
+            const selectedWindow = state.complianceResults.windows[state.selectedWindowIndex];
+            windowStartDate = selectedWindow.startDate;
+            windowEndDate = selectedWindow.endDate;
+        }
+        
         const monthCalendars = this.querySelectorAll('month-calendar');
         monthCalendars.forEach(cal => {
-            cal.updateDates(confirmedDates, pendingDates);
+            cal.updateDates(confirmedDates, pendingDates, windowStartDate, windowEndDate);
         });
     }
 }

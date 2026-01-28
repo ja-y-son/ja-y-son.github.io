@@ -4,8 +4,8 @@
  * Displays:
  * - Current settings (default days, required days)
  * - Compliance status
- * - Non-compliant windows details
- * - Statistics
+ * - Sliding windows (selectable)
+ * - Selected window details
  */
 
 import { store } from '../state/store.js';
@@ -35,7 +35,7 @@ export class SidebarPanel extends HTMLElement {
     
     _render() {
         const state = store.getState();
-        const { defaultOfficeDays, requiredDays, complianceResults } = state;
+        const { defaultOfficeDays, requiredDays, complianceResults, selectedWindowIndex } = state;
         
         // Format default days for display
         const daysDisplay = defaultOfficeDays
@@ -68,8 +68,11 @@ export class SidebarPanel extends HTMLElement {
                     ${this._renderComplianceStatus(complianceResults)}
                 </section>
                 
-                <!-- Non-Compliant Windows -->
-                ${this._renderNonCompliantWindows(complianceResults)}
+                <!-- Selected Window Details -->
+                ${this._renderSelectedWindowDetails(complianceResults, selectedWindowIndex)}
+                
+                <!-- Sliding Windows List -->
+                ${this._renderSlidingWindows(complianceResults, selectedWindowIndex)}
                 
                 <!-- Company Holidays Section -->
                 ${this._renderHolidays()}
@@ -91,6 +94,28 @@ export class SidebarPanel extends HTMLElement {
                         composed: true
                     }));
                 }
+            });
+        }
+        
+        // Window selection listeners
+        this.querySelectorAll('.window-item[data-index]').forEach(item => {
+            item.addEventListener('click', () => {
+                const index = parseInt(item.dataset.index, 10);
+                const currentIndex = store.get('selectedWindowIndex');
+                // Toggle selection
+                if (currentIndex === index) {
+                    store.clearWindowSelection();
+                } else {
+                    store.selectWindow(index);
+                }
+            });
+        });
+        
+        // Clear selection button
+        const clearBtn = this.querySelector('#clearWindowSelection');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                store.clearWindowSelection();
             });
         }
     }
@@ -122,38 +147,113 @@ export class SidebarPanel extends HTMLElement {
         }
     }
     
-    _renderNonCompliantWindows(results) {
-        if (!results || results.isCompliant) {
+    _renderSlidingWindows(results, selectedIndex) {
+        if (!results || !results.windows || results.windows.length === 0) {
             return '';
         }
         
-        const windows = results.nonCompliantWindows.slice(0, 10); // Limit display
-        const hasMore = results.nonCompliantWindows.length > 10;
+        const windows = results.windows;
         
         return `
             <section class="sidebar-section">
-                <h3 class="sidebar-section-title">Non-Compliant Windows</h3>
+                <h3 class="sidebar-section-title">Sliding Windows (${windows.length})</h3>
+                <p class="form-hint">Click a window to see details and highlight on calendar</p>
                 <div class="windows-list">
-                    ${windows.map(w => this._renderWindowItem(w)).join('')}
-                    ${hasMore ? `<p class="form-hint">...and ${results.nonCompliantWindows.length - 10} more</p>` : ''}
+                    ${windows.map((w, idx) => this._renderWindowItem(w, idx, selectedIndex)).join('')}
                 </div>
             </section>
         `;
     }
     
-    _renderWindowItem(window) {
+    _renderWindowItem(window, index, selectedIndex) {
         const formatted = formatWindowForDisplay(window);
+        const isSelected = index === selectedIndex;
+        const statusClass = window.isCompliant ? 'compliant' : 'non-compliant';
+        const selectedClass = isSelected ? 'selected' : '';
         
         return `
-            <div class="window-item">
-                <div class="window-dates">${formatted.weekRange}</div>
+            <div class="window-item ${statusClass} ${selectedClass}" data-index="${index}">
+                <div class="window-header">
+                    <span class="window-dates">${formatted.weekRange}</span>
+                    <span class="window-status-icon">${window.isCompliant ? '✓' : '✗'}</span>
+                </div>
                 <div class="window-details">${formatted.dateRange}</div>
                 <div class="window-result">
-                    <span>Average: ${formatted.average} → ${formatted.rounded}</span>
-                    <span class="result-value">Need: ${formatted.required}</span>
+                    <span>Avg: ${formatted.average} → ${formatted.rounded}</span>
+                    <span class="result-value ${statusClass}">Req: ${formatted.required}</span>
                 </div>
             </div>
         `;
+    }
+    
+    _renderSelectedWindowDetails(results, selectedIndex) {
+        if (!results || selectedIndex === null || selectedIndex === undefined) {
+            return '';
+        }
+        
+        const window = results.windows[selectedIndex];
+        if (!window) return '';
+        
+        const formatted = formatWindowForDisplay(window);
+        const statusClass = window.isCompliant ? 'compliant' : 'non-compliant';
+        
+        return `
+            <section class="sidebar-section window-details-section">
+                <div class="window-details-header">
+                    <h3 class="sidebar-section-title">Window Details</h3>
+                    <button class="btn btn-sm btn-ghost" id="clearWindowSelection" title="Clear selection">✕</button>
+                </div>
+                <div class="selected-window-card ${statusClass}">
+                    <div class="window-detail-row">
+                        <span class="detail-label">Date Range</span>
+                        <span class="detail-value">${formatted.dateRange}</span>
+                    </div>
+                    <div class="window-detail-row">
+                        <span class="detail-label">Weeks</span>
+                        <span class="detail-value">${formatted.weekRange}</span>
+                    </div>
+                    <div class="window-detail-row">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value status-badge ${statusClass}">
+                            ${window.isCompliant ? '✓ Compliant' : '✗ Non-Compliant'}
+                        </span>
+                    </div>
+                    <div class="window-detail-row">
+                        <span class="detail-label">Best 8 Avg</span>
+                        <span class="detail-value">${formatted.average} → ${formatted.rounded} days/week</span>
+                    </div>
+                    <div class="window-detail-row">
+                        <span class="detail-label">Required</span>
+                        <span class="detail-value">${formatted.required} days/week</span>
+                    </div>
+                    ${!window.isCompliant ? `
+                    <div class="window-detail-row">
+                        <span class="detail-label">Deficit</span>
+                        <span class="detail-value deficit">${formatted.deficit} day(s)/week short</span>
+                    </div>
+                    ` : ''}
+                    <div class="weekly-breakdown">
+                        <span class="detail-label">Weekly Breakdown (12 weeks):</span>
+                        <div class="weekly-values">
+                            ${this._renderWeeklyValues(window)}
+                        </div>
+                        <span class="form-hint">Highlighted values are counted in "best 8"</span>
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+    
+    _renderWeeklyValues(window) {
+        // Find which indices are in the best 8 (top 8 values)
+        const indexed = window.weeklyValues.map((v, i) => ({ value: v, index: i }));
+        const sorted = [...indexed].sort((a, b) => b.value - a.value);
+        const best8Indices = new Set(sorted.slice(0, 8).map(x => x.index));
+        
+        return window.weeklyValues.map((v, i) => {
+            const isBest8 = best8Indices.has(i);
+            return `<span class="week-value ${isBest8 ? 'best8' : ''}" title="Week ${i + 1}">${v}</span>`;
+        }).join('');
     }
     
     _renderHolidays() {

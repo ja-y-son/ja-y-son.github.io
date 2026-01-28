@@ -49,7 +49,9 @@
     // Pending changes (array of ISO date strings)
     pendingDates: [],
     // Compliance results
-    complianceResults: null
+    complianceResults: null,
+    // Selected sliding window index (null = none selected)
+    selectedWindowIndex: null
   };
   var Store = class {
     constructor() {
@@ -110,6 +112,19 @@
       this._state = { ...initialState, year: (/* @__PURE__ */ new Date()).getFullYear() };
       storageAdapter.clear(STORAGE_KEY);
       this._notify({});
+    }
+    /**
+     * Select a sliding window by index
+     * @param {number|null} index - Window index (0-based) or null to deselect
+     */
+    selectWindow(index) {
+      this.setState({ selectedWindowIndex: index });
+    }
+    /**
+     * Clear window selection
+     */
+    clearWindowSelection() {
+      this.setState({ selectedWindowIndex: null });
     }
     /**
      * Check if there are pending changes
@@ -551,7 +566,7 @@
   // js/components/day-cell.js
   var DayCell = class extends HTMLElement {
     static get observedAttributes() {
-      return ["date", "selected", "pending-add", "pending-remove", "disabled"];
+      return ["date", "selected", "pending-add", "pending-remove", "disabled", "in-window"];
     }
     constructor() {
       super();
@@ -616,6 +631,16 @@
         this.removeAttribute("disabled");
       }
     }
+    get inWindow() {
+      return this.hasAttribute("in-window");
+    }
+    set inWindow(value) {
+      if (value) {
+        this.setAttribute("in-window", "");
+      } else {
+        this.removeAttribute("in-window");
+      }
+    }
     _render() {
       const dateStr = this.date;
       if (!dateStr) {
@@ -657,6 +682,9 @@
       if (this.disabled) {
         cell.classList.add("disabled");
       }
+      if (this.inWindow) {
+        cell.classList.add("in-window");
+      }
     }
     _setupEventListeners() {
       this.addEventListener("click", (e) => {
@@ -685,6 +713,8 @@
       super();
       this._confirmedDates = /* @__PURE__ */ new Set();
       this._pendingDates = /* @__PURE__ */ new Set();
+      this._windowStartDate = null;
+      this._windowEndDate = null;
     }
     connectedCallback() {
       this._render();
@@ -710,10 +740,14 @@
      * Update the dates displayed in this month
      * @param {Set<string>} confirmedDates 
      * @param {Set<string>} pendingDates 
+     * @param {string|null} windowStartDate - ISO date string for window start
+     * @param {string|null} windowEndDate - ISO date string for window end
      */
-    updateDates(confirmedDates, pendingDates) {
+    updateDates(confirmedDates, pendingDates, windowStartDate = null, windowEndDate = null) {
       this._confirmedDates = confirmedDates;
       this._pendingDates = pendingDates;
+      this._windowStartDate = windowStartDate;
+      this._windowEndDate = windowEndDate;
       this._updateDayCells();
     }
     _render() {
@@ -759,12 +793,18 @@
         cell.selected = false;
         cell.pendingAdd = false;
         cell.pendingRemove = false;
+        cell.inWindow = false;
         if (isConfirmed && isPending) {
           cell.selected = true;
         } else if (isConfirmed && !isPending) {
           cell.pendingRemove = true;
         } else if (!isConfirmed && isPending) {
           cell.pendingAdd = true;
+        }
+        if (this._windowStartDate && this._windowEndDate) {
+          if (dateStr >= this._windowStartDate && dateStr <= this._windowEndDate) {
+            cell.inWindow = true;
+          }
         }
       });
     }
@@ -815,6 +855,10 @@
                     <div class="legend-swatch weekend"></div>
                     <span>Weekend</span>
                 </div>
+                <div class="legend-item">
+                    <div class="legend-swatch in-window"></div>
+                    <span>Selected window</span>
+                </div>
             </div>
             <div class="calendar-grid" id="calendarGrid">
                 ${this._renderMonths(year)}
@@ -850,9 +894,16 @@
       const state = store.getState();
       const confirmedDates = new Set(state.confirmedDates);
       const pendingDates = new Set(state.pendingDates);
+      let windowStartDate = null;
+      let windowEndDate = null;
+      if (state.selectedWindowIndex !== null && state.complianceResults && state.complianceResults.windows[state.selectedWindowIndex]) {
+        const selectedWindow = state.complianceResults.windows[state.selectedWindowIndex];
+        windowStartDate = selectedWindow.startDate;
+        windowEndDate = selectedWindow.endDate;
+      }
       const monthCalendars = this.querySelectorAll("month-calendar");
       monthCalendars.forEach((cal) => {
-        cal.updateDates(confirmedDates, pendingDates);
+        cal.updateDates(confirmedDates, pendingDates, windowStartDate, windowEndDate);
       });
     }
   };
@@ -877,7 +928,7 @@
     }
     _render() {
       const state = store.getState();
-      const { defaultOfficeDays, requiredDays, complianceResults } = state;
+      const { defaultOfficeDays, requiredDays, complianceResults, selectedWindowIndex } = state;
       const daysDisplay = defaultOfficeDays.map((d) => WEEKDAY_ABBRS[d]).join(", ") || "None selected";
       this.innerHTML = `
             <div class="sidebar-content">
@@ -905,8 +956,11 @@
                     ${this._renderComplianceStatus(complianceResults)}
                 </section>
                 
-                <!-- Non-Compliant Windows -->
-                ${this._renderNonCompliantWindows(complianceResults)}
+                <!-- Selected Window Details -->
+                ${this._renderSelectedWindowDetails(complianceResults, selectedWindowIndex)}
+                
+                <!-- Sliding Windows List -->
+                ${this._renderSlidingWindows(complianceResults, selectedWindowIndex)}
                 
                 <!-- Company Holidays Section -->
                 ${this._renderHolidays()}
@@ -925,6 +979,23 @@
               composed: true
             }));
           }
+        });
+      }
+      this.querySelectorAll(".window-item[data-index]").forEach((item) => {
+        item.addEventListener("click", () => {
+          const index = parseInt(item.dataset.index, 10);
+          const currentIndex = store.get("selectedWindowIndex");
+          if (currentIndex === index) {
+            store.clearWindowSelection();
+          } else {
+            store.selectWindow(index);
+          }
+        });
+      });
+      const clearBtn = this.querySelector("#clearWindowSelection");
+      if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+          store.clearWindowSelection();
         });
       }
     }
@@ -953,34 +1024,103 @@
             `;
       }
     }
-    _renderNonCompliantWindows(results) {
-      if (!results || results.isCompliant) {
+    _renderSlidingWindows(results, selectedIndex) {
+      if (!results || !results.windows || results.windows.length === 0) {
         return "";
       }
-      const windows = results.nonCompliantWindows.slice(0, 10);
-      const hasMore = results.nonCompliantWindows.length > 10;
+      const windows = results.windows;
       return `
             <section class="sidebar-section">
-                <h3 class="sidebar-section-title">Non-Compliant Windows</h3>
+                <h3 class="sidebar-section-title">Sliding Windows (${windows.length})</h3>
+                <p class="form-hint">Click a window to see details and highlight on calendar</p>
                 <div class="windows-list">
-                    ${windows.map((w) => this._renderWindowItem(w)).join("")}
-                    ${hasMore ? `<p class="form-hint">...and ${results.nonCompliantWindows.length - 10} more</p>` : ""}
+                    ${windows.map((w, idx) => this._renderWindowItem(w, idx, selectedIndex)).join("")}
                 </div>
             </section>
         `;
     }
-    _renderWindowItem(window2) {
+    _renderWindowItem(window2, index, selectedIndex) {
       const formatted = formatWindowForDisplay(window2);
+      const isSelected = index === selectedIndex;
+      const statusClass = window2.isCompliant ? "compliant" : "non-compliant";
+      const selectedClass = isSelected ? "selected" : "";
       return `
-            <div class="window-item">
-                <div class="window-dates">${formatted.weekRange}</div>
+            <div class="window-item ${statusClass} ${selectedClass}" data-index="${index}">
+                <div class="window-header">
+                    <span class="window-dates">${formatted.weekRange}</span>
+                    <span class="window-status-icon">${window2.isCompliant ? "\u2713" : "\u2717"}</span>
+                </div>
                 <div class="window-details">${formatted.dateRange}</div>
                 <div class="window-result">
-                    <span>Average: ${formatted.average} \u2192 ${formatted.rounded}</span>
-                    <span class="result-value">Need: ${formatted.required}</span>
+                    <span>Avg: ${formatted.average} \u2192 ${formatted.rounded}</span>
+                    <span class="result-value ${statusClass}">Req: ${formatted.required}</span>
                 </div>
             </div>
         `;
+    }
+    _renderSelectedWindowDetails(results, selectedIndex) {
+      if (!results || selectedIndex === null || selectedIndex === void 0) {
+        return "";
+      }
+      const window2 = results.windows[selectedIndex];
+      if (!window2)
+        return "";
+      const formatted = formatWindowForDisplay(window2);
+      const statusClass = window2.isCompliant ? "compliant" : "non-compliant";
+      return `
+            <section class="sidebar-section window-details-section">
+                <div class="window-details-header">
+                    <h3 class="sidebar-section-title">Window Details</h3>
+                    <button class="btn btn-sm btn-ghost" id="clearWindowSelection" title="Clear selection">\u2715</button>
+                </div>
+                <div class="selected-window-card ${statusClass}">
+                    <div class="window-detail-row">
+                        <span class="detail-label">Date Range</span>
+                        <span class="detail-value">${formatted.dateRange}</span>
+                    </div>
+                    <div class="window-detail-row">
+                        <span class="detail-label">Weeks</span>
+                        <span class="detail-value">${formatted.weekRange}</span>
+                    </div>
+                    <div class="window-detail-row">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value status-badge ${statusClass}">
+                            ${window2.isCompliant ? "\u2713 Compliant" : "\u2717 Non-Compliant"}
+                        </span>
+                    </div>
+                    <div class="window-detail-row">
+                        <span class="detail-label">Best 8 Avg</span>
+                        <span class="detail-value">${formatted.average} \u2192 ${formatted.rounded} days/week</span>
+                    </div>
+                    <div class="window-detail-row">
+                        <span class="detail-label">Required</span>
+                        <span class="detail-value">${formatted.required} days/week</span>
+                    </div>
+                    ${!window2.isCompliant ? `
+                    <div class="window-detail-row">
+                        <span class="detail-label">Deficit</span>
+                        <span class="detail-value deficit">${formatted.deficit} day(s)/week short</span>
+                    </div>
+                    ` : ""}
+                    <div class="weekly-breakdown">
+                        <span class="detail-label">Weekly Breakdown (12 weeks):</span>
+                        <div class="weekly-values">
+                            ${this._renderWeeklyValues(window2)}
+                        </div>
+                        <span class="form-hint">Highlighted values are counted in "best 8"</span>
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+    _renderWeeklyValues(window2) {
+      const indexed = window2.weeklyValues.map((v, i) => ({ value: v, index: i }));
+      const sorted = [...indexed].sort((a, b) => b.value - a.value);
+      const best8Indices = new Set(sorted.slice(0, 8).map((x) => x.index));
+      return window2.weeklyValues.map((v, i) => {
+        const isBest8 = best8Indices.has(i);
+        return `<span class="week-value ${isBest8 ? "best8" : ""}" title="Week ${i + 1}">${v}</span>`;
+      }).join("");
     }
     _renderHolidays() {
       const holidays = Object.entries(COMPANY_HOLIDAYS).map(([dateStr, name]) => {

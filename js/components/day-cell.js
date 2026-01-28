@@ -9,7 +9,7 @@ import { isWeekend, isToday, isBeforePolicyStart, isCompanyHoliday, toISODateStr
 
 export class DayCell extends HTMLElement {
     static get observedAttributes() {
-        return ['date', 'selected', 'pending-add', 'pending-remove', 'disabled'];
+        return ['date', 'selected', 'pending-add', 'pending-remove', 'disabled', 'in-window'];
     }
     
     constructor() {
@@ -88,6 +88,18 @@ export class DayCell extends HTMLElement {
         }
     }
     
+    get inWindow() {
+        return this.hasAttribute('in-window');
+    }
+    
+    set inWindow(value) {
+        if (value) {
+            this.setAttribute('in-window', '');
+        } else {
+            this.removeAttribute('in-window');
+        }
+    }
+    
     _render() {
         const dateStr = this.date;
         if (!dateStr) {
@@ -144,6 +156,10 @@ export class DayCell extends HTMLElement {
         
         if (this.disabled) {
             cell.classList.add('disabled');
+        }
+        
+        if (this.inWindow) {
+            cell.classList.add('in-window');
         }
     }
     

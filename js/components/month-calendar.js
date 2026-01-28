@@ -22,6 +22,8 @@ export class MonthCalendar extends HTMLElement {
         super();
         this._confirmedDates = new Set();
         this._pendingDates = new Set();
+        this._windowStartDate = null;
+        this._windowEndDate = null;
     }
     
     connectedCallback() {
@@ -54,10 +56,14 @@ export class MonthCalendar extends HTMLElement {
      * Update the dates displayed in this month
      * @param {Set<string>} confirmedDates 
      * @param {Set<string>} pendingDates 
+     * @param {string|null} windowStartDate - ISO date string for window start
+     * @param {string|null} windowEndDate - ISO date string for window end
      */
-    updateDates(confirmedDates, pendingDates) {
+    updateDates(confirmedDates, pendingDates, windowStartDate = null, windowEndDate = null) {
         this._confirmedDates = confirmedDates;
         this._pendingDates = pendingDates;
+        this._windowStartDate = windowStartDate;
+        this._windowEndDate = windowEndDate;
         this._updateDayCells();
     }
     
@@ -113,6 +119,7 @@ export class MonthCalendar extends HTMLElement {
             cell.selected = false;
             cell.pendingAdd = false;
             cell.pendingRemove = false;
+            cell.inWindow = false;
             
             if (isConfirmed && isPending) {
                 // No change - show as selected
@@ -125,6 +132,13 @@ export class MonthCalendar extends HTMLElement {
                 cell.pendingAdd = true;
             }
             // else: not selected, not pending - default state
+            
+            // Check if date is within selected window
+            if (this._windowStartDate && this._windowEndDate) {
+                if (dateStr >= this._windowStartDate && dateStr <= this._windowEndDate) {
+                    cell.inWindow = true;
+                }
+            }
         });
     }
 }

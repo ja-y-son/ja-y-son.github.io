@@ -139,6 +139,20 @@
     color: var(--color-white);
 }
 
+/* In selected window highlight */
+.day-cell.in-window {
+    box-shadow: inset 0 0 0 3px #f59e0b;
+    position: relative;
+}
+
+.day-cell.in-window:not(.selected):not(.pending-add):not(.pending-remove):not(.weekend):not(.before-policy) {
+    background: #fef3c7;
+}
+
+.day-cell.in-window.selected {
+    box-shadow: inset 0 0 0 3px #f59e0b;
+}
+
 /* Selected state (going to office) */
 .day-cell.selected {
     background: var(--color-primary);
@@ -251,6 +265,11 @@
         var(--color-gray-40) 2px,
         var(--color-gray-40) 3px
     );
+}
+
+.legend-swatch.in-window {
+    background: #fef3c7;
+    box-shadow: inset 0 0 0 2px #f59e0b;
 }
 
 /* ================================

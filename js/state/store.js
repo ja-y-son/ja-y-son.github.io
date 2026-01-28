@@ -165,7 +165,10 @@ const initialState = {
     pendingDates: [],
     
     // Compliance results
-    complianceResults: null
+    complianceResults: null,
+    
+    // Selected sliding window index (null = none selected)
+    selectedWindowIndex: null
 };
 
 // ================================
@@ -240,6 +243,21 @@ class Store {
         this._state = { ...initialState, year: new Date().getFullYear() };
         storageAdapter.clear(STORAGE_KEY);
         this._notify({});
+    }
+    
+    /**
+     * Select a sliding window by index
+     * @param {number|null} index - Window index (0-based) or null to deselect
+     */
+    selectWindow(index) {
+        this.setState({ selectedWindowIndex: index });
+    }
+    
+    /**
+     * Clear window selection
+     */
+    clearWindowSelection() {
+        this.setState({ selectedWindowIndex: null });
     }
     
     /**
