@@ -157,28 +157,7 @@ export function calculateCompliance(year, selectedDates, requiredDays) {
         totalWindows: windows.length,
         isCompliant: nonCompliantWindows.length === 0,
         windows,
-        nonCompliantWindows,
-        stats: calculateStats(selectedDates, weeklyAttendance, year)
-    };
-}
-
-/**
- * Calculate summary statistics
- * @param {string[]} selectedDates 
- * @param {Map<string, number>} weeklyAttendance 
- * @param {number} year 
- * @returns {object}
- */
-function calculateStats(selectedDates, weeklyAttendance, year) {
-    const totalOfficeDays = selectedDates.filter(d => d.startsWith(String(year))).length;
-    const weeklyValues = Array.from(weeklyAttendance.values());
-    const totalWeeks = weeklyValues.length;
-    const avgPerWeek = totalWeeks > 0 ? totalOfficeDays / totalWeeks : 0;
-    
-    return {
-        totalOfficeDays,
-        totalWeeks,
-        averagePerWeek: Math.round(avgPerWeek * 10) / 10
+        nonCompliantWindows
     };
 }
 
@@ -225,5 +204,4 @@ export function formatWindowForDisplay(window) {
  * @property {boolean} isCompliant - Overall compliance
  * @property {WindowResult[]} windows - All window results
  * @property {WindowResult[]} nonCompliantWindows - Only failing windows
- * @property {object} stats - Summary statistics
  */

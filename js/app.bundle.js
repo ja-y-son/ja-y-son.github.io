@@ -420,19 +420,7 @@
       totalWindows: windows.length,
       isCompliant: nonCompliantWindows.length === 0,
       windows,
-      nonCompliantWindows,
-      stats: calculateStats(selectedDates, weeklyAttendance, year)
-    };
-  }
-  function calculateStats(selectedDates, weeklyAttendance, year) {
-    const totalOfficeDays = selectedDates.filter((d) => d.startsWith(String(year))).length;
-    const weeklyValues = Array.from(weeklyAttendance.values());
-    const totalWeeks = weeklyValues.length;
-    const avgPerWeek = totalWeeks > 0 ? totalOfficeDays / totalWeeks : 0;
-    return {
-      totalOfficeDays,
-      totalWeeks,
-      averagePerWeek: Math.round(avgPerWeek * 10) / 10
+      nonCompliantWindows
     };
   }
   function formatWindowForDisplay(window2) {
@@ -920,9 +908,6 @@
                 <!-- Non-Compliant Windows -->
                 ${this._renderNonCompliantWindows(complianceResults)}
                 
-                <!-- Statistics Section -->
-                ${this._renderStats(complianceResults)}
-                
                 <!-- Company Holidays Section -->
                 ${this._renderHolidays()}
             </div>
@@ -995,27 +980,6 @@
                     <span class="result-value">Need: ${formatted.required}</span>
                 </div>
             </div>
-        `;
-    }
-    _renderStats(results) {
-      if (!results || !results.stats) {
-        return "";
-      }
-      const { totalOfficeDays, totalWeeks, averagePerWeek } = results.stats;
-      return `
-            <section class="sidebar-section">
-                <h3 class="sidebar-section-title">Statistics</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value">${totalOfficeDays}</div>
-                        <div class="stat-label">Total Office Days</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${averagePerWeek}</div>
-                        <div class="stat-label">Avg Days/Week</div>
-                    </div>
-                </div>
-            </section>
         `;
     }
     _renderHolidays() {

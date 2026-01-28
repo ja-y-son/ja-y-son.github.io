@@ -71,9 +71,6 @@ export class SidebarPanel extends HTMLElement {
                 <!-- Non-Compliant Windows -->
                 ${this._renderNonCompliantWindows(complianceResults)}
                 
-                <!-- Statistics Section -->
-                ${this._renderStats(complianceResults)}
-                
                 <!-- Company Holidays Section -->
                 ${this._renderHolidays()}
             </div>
@@ -156,30 +153,6 @@ export class SidebarPanel extends HTMLElement {
                     <span class="result-value">Need: ${formatted.required}</span>
                 </div>
             </div>
-        `;
-    }
-    
-    _renderStats(results) {
-        if (!results || !results.stats) {
-            return '';
-        }
-        
-        const { totalOfficeDays, totalWeeks, averagePerWeek } = results.stats;
-        
-        return `
-            <section class="sidebar-section">
-                <h3 class="sidebar-section-title">Statistics</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value">${totalOfficeDays}</div>
-                        <div class="stat-label">Total Office Days</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${averagePerWeek}</div>
-                        <div class="stat-label">Avg Days/Week</div>
-                    </div>
-                </div>
-            </section>
         `;
     }
     
