@@ -38,8 +38,8 @@ setup-form {
 }
 
 .day-checkbox {
-    flex: 1 1 auto;
-    min-width: 60px;
+    flex: 1 1 80px;
+    max-width: calc(20% - var(--spacing-sm));
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -371,7 +371,8 @@ day-cell {
     }
     
     .day-checkbox {
-        min-width: 50px;
+        flex: 1 1 60px;
+        max-width: none;
         padding: var(--spacing-sm);
     }
     
