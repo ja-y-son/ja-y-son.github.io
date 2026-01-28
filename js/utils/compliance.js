@@ -10,7 +10,8 @@ import {
     parseISODateString, 
     getWeekStart, 
     toISODateString,
-    formatDateRange 
+    formatDateRange,
+    POLICY_START_DATE
 } from './date-utils.js';
 
 /**
@@ -93,16 +94,33 @@ export function calculateWindowResult(weeklyValues) {
 export function calculateCompliance(year, selectedDates, requiredDays) {
     const weeklyAttendance = calculateWeeklyAttendance(year, selectedDates);
     const weeks = getWeeksInYear(year);
+    
+    // Find the first week that starts on or after policy start date
+    const policyStartWeekIndex = weeks.findIndex(w => toISODateString(w.start) >= POLICY_START_DATE);
+    
+    // If policy hasn't started yet in this year, return empty results
+    if (policyStartWeekIndex === -1) {
+        return {
+            year,
+            requiredDays,
+            totalWindows: 0,
+            isCompliant: true,
+            windows: [],
+            nonCompliantWindows: [],
+            stats: calculateStats(selectedDates, weeklyAttendance, year)
+        };
+    }
+    
     const weekKeys = weeks.map(w => toISODateString(w.start));
     
     const windows = [];
     const nonCompliantWindows = [];
     
-    // Calculate each 12-week sliding window
+    // Calculate each 12-week sliding window starting from policy start week
     const totalWeeks = weekKeys.length;
     const numWindows = totalWeeks - 11; // Number of complete 12-week windows
     
-    for (let i = 0; i < numWindows; i++) {
+    for (let i = policyStartWeekIndex; i < numWindows; i++) {
         const windowWeeks = weekKeys.slice(i, i + 12);
         const weeklyValues = windowWeeks.map(key => weeklyAttendance.get(key) || 0);
         

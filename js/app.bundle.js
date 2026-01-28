@@ -201,6 +201,7 @@
     "November",
     "December"
   ];
+  var POLICY_START_DATE = "2026-01-26";
   function jsDateDayToWeekday(jsDay) {
     return jsDay === 0 ? 6 : jsDay - 1;
   }
@@ -293,9 +294,10 @@
     const date = new Date(year, 0, 1);
     const daysSet = new Set(daysOfWeek);
     while (date.getFullYear() === year) {
+      const dateStr = toISODateString(date);
       const weekday = jsDateDayToWeekday(date.getDay());
-      if (daysSet.has(weekday)) {
-        dates.push(toISODateString(date));
+      if (daysSet.has(weekday) && dateStr >= POLICY_START_DATE) {
+        dates.push(dateStr);
       }
       date.setDate(date.getDate() + 1);
     }
@@ -303,6 +305,9 @@
   }
   function isToday(isoString) {
     return isoString === toISODateString(/* @__PURE__ */ new Date());
+  }
+  function isBeforePolicyStart(isoString) {
+    return isoString < POLICY_START_DATE;
   }
   function formatDateRange(start, end) {
     const startMonth = MONTH_NAMES[start.getMonth()].slice(0, 3);
@@ -354,12 +359,24 @@
   function calculateCompliance(year, selectedDates, requiredDays) {
     const weeklyAttendance = calculateWeeklyAttendance(year, selectedDates);
     const weeks = getWeeksInYear(year);
+    const policyStartWeekIndex = weeks.findIndex((w) => toISODateString(w.start) >= POLICY_START_DATE);
+    if (policyStartWeekIndex === -1) {
+      return {
+        year,
+        requiredDays,
+        totalWindows: 0,
+        isCompliant: true,
+        windows: [],
+        nonCompliantWindows: [],
+        stats: calculateStats(selectedDates, weeklyAttendance, year)
+      };
+    }
     const weekKeys = weeks.map((w) => toISODateString(w.start));
     const windows = [];
     const nonCompliantWindows = [];
     const totalWeeks = weekKeys.length;
     const numWindows = totalWeeks - 11;
-    for (let i = 0; i < numWindows; i++) {
+    for (let i = policyStartWeekIndex; i < numWindows; i++) {
       const windowWeeks = weekKeys.slice(i, i + 12);
       const weeklyValues = windowWeeks.map((key) => weeklyAttendance.get(key) || 0);
       const { average, rounded, best8 } = calculateWindowResult(weeklyValues);
@@ -619,6 +636,10 @@
         cell.classList.add("weekend", "disabled");
         return;
       }
+      if (isBeforePolicyStart(this.date)) {
+        cell.classList.add("before-policy", "disabled");
+        return;
+      }
       if (isToday(this.date)) {
         cell.classList.add("today");
       }
@@ -639,7 +660,7 @@
         if (!dateStr)
           return;
         const date = /* @__PURE__ */ new Date(dateStr + "T00:00:00");
-        if (isWeekend(date) || this.disabled)
+        if (isWeekend(date) || isBeforePolicyStart(dateStr) || this.disabled)
           return;
         this.dispatchEvent(new CustomEvent("day-toggle", {
           bubbles: true,

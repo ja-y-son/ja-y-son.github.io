@@ -5,7 +5,7 @@
  * Handles click interactions and visual states.
  */
 
-import { isWeekend, isToday, toISODateString } from '../utils/date-utils.js';
+import { isWeekend, isToday, isBeforePolicyStart, toISODateString } from '../utils/date-utils.js';
 
 export class DayCell extends HTMLElement {
     static get observedAttributes() {
@@ -117,6 +117,12 @@ export class DayCell extends HTMLElement {
             return;
         }
         
+        // Check if before policy start date
+        if (isBeforePolicyStart(this.date)) {
+            cell.classList.add('before-policy', 'disabled');
+            return;
+        }
+        
         // Check if today
         if (isToday(this.date)) {
             cell.classList.add('today');
@@ -142,7 +148,7 @@ export class DayCell extends HTMLElement {
             if (!dateStr) return;
             
             const date = new Date(dateStr + 'T00:00:00');
-            if (isWeekend(date) || this.disabled) return;
+            if (isWeekend(date) || isBeforePolicyStart(dateStr) || this.disabled) return;
             
             this.dispatchEvent(new CustomEvent('day-toggle', {
                 bubbles: true,

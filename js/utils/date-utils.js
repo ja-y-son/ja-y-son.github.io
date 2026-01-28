@@ -31,6 +31,10 @@ export const MONTH_NAMES = [
     'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
+// RTO Policy enforcement start date
+export const POLICY_START_DATE = '2026-01-26';
+export const POLICY_START_WEEK_START = '2026-01-26'; // Monday of policy start week
+
 /**
  * Convert JavaScript Date.getDay() (0=Sunday) to our format (0=Monday)
  */
@@ -284,9 +288,11 @@ export function generateDefaultOfficeDates(year, daysOfWeek) {
     const daysSet = new Set(daysOfWeek);
     
     while (date.getFullYear() === year) {
+        const dateStr = toISODateString(date);
         const weekday = jsDateDayToWeekday(date.getDay());
-        if (daysSet.has(weekday)) {
-            dates.push(toISODateString(date));
+        // Only include dates from policy start date onwards
+        if (daysSet.has(weekday) && dateStr >= POLICY_START_DATE) {
+            dates.push(dateStr);
         }
         date.setDate(date.getDate() + 1);
     }
@@ -301,6 +307,15 @@ export function generateDefaultOfficeDates(year, daysOfWeek) {
  */
 export function isToday(isoString) {
     return isoString === toISODateString(new Date());
+}
+
+/**
+ * Check if a date is before the policy start date
+ * @param {string} isoString 
+ * @returns {boolean}
+ */
+export function isBeforePolicyStart(isoString) {
+    return isoString < POLICY_START_DATE;
 }
 
 /**
