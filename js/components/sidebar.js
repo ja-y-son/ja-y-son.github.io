@@ -9,7 +9,7 @@
  */
 
 import { store } from '../state/store.js';
-import { WEEKDAY_ABBRS } from '../utils/date-utils.js';
+import { WEEKDAY_ABBRS, COMPANY_HOLIDAYS, MONTH_NAMES } from '../utils/date-utils.js';
 import { formatWindowForDisplay } from '../utils/compliance.js';
 
 export class SidebarPanel extends HTMLElement {
@@ -73,6 +73,9 @@ export class SidebarPanel extends HTMLElement {
                 
                 <!-- Statistics Section -->
                 ${this._renderStats(complianceResults)}
+                
+                <!-- Company Holidays Section -->
+                ${this._renderHolidays()}
             </div>
         `;
         
@@ -175,6 +178,28 @@ export class SidebarPanel extends HTMLElement {
                         <div class="stat-value">${averagePerWeek}</div>
                         <div class="stat-label">Avg Days/Week</div>
                     </div>
+                </div>
+            </section>
+        `;
+    }
+    
+    _renderHolidays() {
+        const holidays = Object.entries(COMPANY_HOLIDAYS).map(([dateStr, name]) => {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const monthName = MONTH_NAMES[month - 1].slice(0, 3);
+            return { dateStr, name, display: `${monthName} ${day}` };
+        });
+        
+        return `
+            <section class="sidebar-section">
+                <h3 class="sidebar-section-title">Company Holidays</h3>
+                <div class="holidays-list">
+                    ${holidays.map(h => `
+                        <div class="holiday-item">
+                            <span class="holiday-date">${h.display}</span>
+                            <span class="holiday-name">${h.name}</span>
+                        </div>
+                    `).join('')}
                 </div>
             </section>
         `;

@@ -246,6 +246,34 @@ sidebar-panel {
     margin-top: var(--spacing-xs);
 }
 
+/* Holidays Display */
+.holidays-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.holiday-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+    background: var(--color-gray-10);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+}
+
+.holiday-date {
+    font-weight: 600;
+    color: var(--color-primary);
+    min-width: 60px;
+}
+
+.holiday-name {
+    color: var(--color-gray-150);
+    text-align: right;
+}
+
 /* ================================
    Action Bar Component
    ================================ */

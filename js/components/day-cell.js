@@ -5,7 +5,7 @@
  * Handles click interactions and visual states.
  */
 
-import { isWeekend, isToday, isBeforePolicyStart, toISODateString } from '../utils/date-utils.js';
+import { isWeekend, isToday, isBeforePolicyStart, isCompanyHoliday, toISODateString } from '../utils/date-utils.js';
 
 export class DayCell extends HTMLElement {
     static get observedAttributes() {
@@ -121,6 +121,11 @@ export class DayCell extends HTMLElement {
         if (isBeforePolicyStart(this.date)) {
             cell.classList.add('before-policy', 'disabled');
             return;
+        }
+        
+        // Check if company holiday
+        if (isCompanyHoliday(this.date)) {
+            cell.classList.add('holiday');
         }
         
         // Check if today

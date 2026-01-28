@@ -115,6 +115,30 @@
     opacity: 0.6;
 }
 
+/* Company holiday */
+.day-cell.holiday {
+    background: var(--color-warning-light);
+    color: var(--color-gray-150);
+}
+
+.day-cell.holiday::after {
+    content: '★';
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    font-size: 8px;
+    color: var(--color-warning);
+}
+
+.day-cell.holiday.selected {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+.day-cell.holiday.selected::after {
+    color: var(--color-white);
+}
+
 /* Selected state (going to office) */
 .day-cell.selected {
     background: var(--color-primary);

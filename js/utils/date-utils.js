@@ -35,6 +35,36 @@ export const MONTH_NAMES = [
 export const POLICY_START_DATE = '2026-01-26';
 export const POLICY_START_WEEK_START = '2026-01-26'; // Monday of policy start week
 
+// Company Holidays for 2026 (date string -> holiday name)
+export const COMPANY_HOLIDAYS = {
+    '2026-02-16': "Presidents' Day",
+    '2026-05-25': 'Memorial Day',
+    '2026-07-03': 'Independence Day',
+    '2026-09-07': 'Labor Day',
+    '2026-11-26': 'Thanksgiving Day',
+    '2026-11-27': 'Day after Thanksgiving',
+    '2026-12-24': 'Christmas Eve',
+    '2026-12-25': 'Christmas Day'
+};
+
+/**
+ * Check if a date is a company holiday
+ * @param {string} isoString 
+ * @returns {boolean}
+ */
+export function isCompanyHoliday(isoString) {
+    return isoString in COMPANY_HOLIDAYS;
+}
+
+/**
+ * Get holiday name for a date
+ * @param {string} isoString 
+ * @returns {string|null}
+ */
+export function getHolidayName(isoString) {
+    return COMPANY_HOLIDAYS[isoString] || null;
+}
+
 /**
  * Convert JavaScript Date.getDay() (0=Sunday) to our format (0=Monday)
  */
@@ -290,8 +320,8 @@ export function generateDefaultOfficeDates(year, daysOfWeek) {
     while (date.getFullYear() === year) {
         const dateStr = toISODateString(date);
         const weekday = jsDateDayToWeekday(date.getDay());
-        // Only include dates from policy start date onwards
-        if (daysSet.has(weekday) && dateStr >= POLICY_START_DATE) {
+        // Only include dates from policy start date onwards, excluding company holidays
+        if (daysSet.has(weekday) && dateStr >= POLICY_START_DATE && !isCompanyHoliday(dateStr)) {
             dates.push(dateStr);
         }
         date.setDate(date.getDate() + 1);

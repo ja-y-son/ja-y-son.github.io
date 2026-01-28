@@ -202,6 +202,19 @@
     "December"
   ];
   var POLICY_START_DATE = "2026-01-26";
+  var COMPANY_HOLIDAYS = {
+    "2026-02-16": "Presidents' Day",
+    "2026-05-25": "Memorial Day",
+    "2026-07-03": "Independence Day",
+    "2026-09-07": "Labor Day",
+    "2026-11-26": "Thanksgiving Day",
+    "2026-11-27": "Day after Thanksgiving",
+    "2026-12-24": "Christmas Eve",
+    "2026-12-25": "Christmas Day"
+  };
+  function isCompanyHoliday(isoString) {
+    return isoString in COMPANY_HOLIDAYS;
+  }
   function jsDateDayToWeekday(jsDay) {
     return jsDay === 0 ? 6 : jsDay - 1;
   }
@@ -296,7 +309,7 @@
     while (date.getFullYear() === year) {
       const dateStr = toISODateString(date);
       const weekday = jsDateDayToWeekday(date.getDay());
-      if (daysSet.has(weekday) && dateStr >= POLICY_START_DATE) {
+      if (daysSet.has(weekday) && dateStr >= POLICY_START_DATE && !isCompanyHoliday(dateStr)) {
         dates.push(dateStr);
       }
       date.setDate(date.getDate() + 1);
@@ -640,6 +653,9 @@
         cell.classList.add("before-policy", "disabled");
         return;
       }
+      if (isCompanyHoliday(this.date)) {
+        cell.classList.add("holiday");
+      }
       if (isToday(this.date)) {
         cell.classList.add("today");
       }
@@ -906,6 +922,9 @@
                 
                 <!-- Statistics Section -->
                 ${this._renderStats(complianceResults)}
+                
+                <!-- Company Holidays Section -->
+                ${this._renderHolidays()}
             </div>
         `;
       this._setupEventListeners();
@@ -995,6 +1014,26 @@
                         <div class="stat-value">${averagePerWeek}</div>
                         <div class="stat-label">Avg Days/Week</div>
                     </div>
+                </div>
+            </section>
+        `;
+    }
+    _renderHolidays() {
+      const holidays = Object.entries(COMPANY_HOLIDAYS).map(([dateStr, name]) => {
+        const [year, month, day] = dateStr.split("-").map(Number);
+        const monthName = MONTH_NAMES[month - 1].slice(0, 3);
+        return { dateStr, name, display: `${monthName} ${day}` };
+      });
+      return `
+            <section class="sidebar-section">
+                <h3 class="sidebar-section-title">Company Holidays</h3>
+                <div class="holidays-list">
+                    ${holidays.map((h) => `
+                        <div class="holiday-item">
+                            <span class="holiday-date">${h.display}</span>
+                            <span class="holiday-name">${h.name}</span>
+                        </div>
+                    `).join("")}
                 </div>
             </section>
         `;
