@@ -32,6 +32,8 @@ class RTOPlannerApp {
         
         // Check if setup is already complete (from storage)
         if (state.setupComplete && state.confirmedDates.length > 0) {
+            // Recalculate compliance on page load (not persisted in storage)
+            this._recalculateCompliance();
             this._showPlanner();
         } else {
             this._showSetup();
@@ -51,6 +53,16 @@ class RTOPlannerApp {
         document.addEventListener('changes-confirmed', (e) => {
             console.log('Changes confirmed:', e.detail);
         });
+    }
+    
+    _recalculateCompliance() {
+        const state = store.getState();
+        const complianceResults = calculateCompliance(
+            state.year,
+            state.confirmedDates,
+            state.requiredDays
+        );
+        store.setState({ complianceResults });
     }
     
     _showSetup() {

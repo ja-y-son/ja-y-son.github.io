@@ -1110,6 +1110,7 @@
       const state = store.getState();
       this.yearBadge.textContent = state.year;
       if (state.setupComplete && state.confirmedDates.length > 0) {
+        this._recalculateCompliance();
         this._showPlanner();
       } else {
         this._showSetup();
@@ -1123,6 +1124,15 @@
       document.addEventListener("changes-confirmed", (e) => {
         console.log("Changes confirmed:", e.detail);
       });
+    }
+    _recalculateCompliance() {
+      const state = store.getState();
+      const complianceResults = calculateCompliance(
+        state.year,
+        state.confirmedDates,
+        state.requiredDays
+      );
+      store.setState({ complianceResults });
     }
     _showSetup() {
       this.setupSection.classList.remove("hidden");
