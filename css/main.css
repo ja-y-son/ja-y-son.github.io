@@ -241,6 +241,13 @@ body {
     font-size: var(--font-size-lg);
 }
 
+.btn-sm {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+    font-size: var(--font-size-lg);
+}
+
 /* ================================
    Form Elements
    ================================ */

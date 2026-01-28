@@ -42,6 +42,11 @@ class RTOPlannerApp {
             this._handleSetupComplete(e.detail);
         });
         
+        // Listen for reset request
+        document.addEventListener('reset-requested', () => {
+            this._handleReset();
+        });
+        
         // Listen for confirmation events (for logging/debugging)
         document.addEventListener('changes-confirmed', (e) => {
             console.log('Changes confirmed:', e.detail);
@@ -51,6 +56,13 @@ class RTOPlannerApp {
     _showSetup() {
         this.setupSection.classList.remove('hidden');
         this.plannerSection.classList.add('hidden');
+        
+        // Re-render setup form to reset its state
+        const setupForm = this.setupSection.querySelector('setup-form');
+        if (setupForm) {
+            setupForm.remove();
+            this.setupSection.innerHTML = '<setup-form></setup-form>';
+        }
     }
     
     _showPlanner() {
@@ -87,6 +99,11 @@ class RTOPlannerApp {
             totalDefaultDates: defaultDates.length,
             isCompliant: complianceResults.isCompliant
         });
+    }
+    
+    _handleReset() {
+        this._showSetup();
+        console.log('Reset complete - returned to setup');
     }
 }
 

@@ -869,6 +869,9 @@
                             <span class="setting-value">${requiredDays} days/week</span>
                         </div>
                     </div>
+                    <button class="btn btn-secondary btn-sm reset-btn" id="resetBtn">
+                        Reset & Reconfigure
+                    </button>
                 </section>
                 
                 <!-- Compliance Section -->
@@ -884,6 +887,21 @@
                 ${this._renderStats(complianceResults)}
             </div>
         `;
+      this._setupEventListeners();
+    }
+    _setupEventListeners() {
+      const resetBtn = this.querySelector("#resetBtn");
+      if (resetBtn) {
+        resetBtn.addEventListener("click", () => {
+          if (confirm("Are you sure you want to reset? All your selections will be lost.")) {
+            store.reset();
+            this.dispatchEvent(new CustomEvent("reset-requested", {
+              bubbles: true,
+              composed: true
+            }));
+          }
+        });
+      }
     }
     _renderComplianceStatus(results) {
       if (!results) {
@@ -1078,6 +1096,9 @@
       document.addEventListener("setup-complete", (e) => {
         this._handleSetupComplete(e.detail);
       });
+      document.addEventListener("reset-requested", () => {
+        this._handleReset();
+      });
       document.addEventListener("changes-confirmed", (e) => {
         console.log("Changes confirmed:", e.detail);
       });
@@ -1085,6 +1106,11 @@
     _showSetup() {
       this.setupSection.classList.remove("hidden");
       this.plannerSection.classList.add("hidden");
+      const setupForm = this.setupSection.querySelector("setup-form");
+      if (setupForm) {
+        setupForm.remove();
+        this.setupSection.innerHTML = "<setup-form></setup-form>";
+      }
     }
     _showPlanner() {
       this.setupSection.classList.add("hidden");
@@ -1110,6 +1136,10 @@
         totalDefaultDates: defaultDates.length,
         isCompliant: complianceResults.isCompliant
       });
+    }
+    _handleReset() {
+      this._showSetup();
+      console.log("Reset complete - returned to setup");
     }
   };
   document.addEventListener("DOMContentLoaded", () => {

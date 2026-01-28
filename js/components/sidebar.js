@@ -57,6 +57,9 @@ export class SidebarPanel extends HTMLElement {
                             <span class="setting-value">${requiredDays} days/week</span>
                         </div>
                     </div>
+                    <button class="btn btn-secondary btn-sm reset-btn" id="resetBtn">
+                        Reset & Reconfigure
+                    </button>
                 </section>
                 
                 <!-- Compliance Section -->
@@ -72,6 +75,24 @@ export class SidebarPanel extends HTMLElement {
                 ${this._renderStats(complianceResults)}
             </div>
         `;
+        
+        // Setup reset button listener
+        this._setupEventListeners();
+    }
+    
+    _setupEventListeners() {
+        const resetBtn = this.querySelector('#resetBtn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to reset? All your selections will be lost.')) {
+                    store.reset();
+                    this.dispatchEvent(new CustomEvent('reset-requested', {
+                        bubbles: true,
+                        composed: true
+                    }));
+                }
+            });
+        }
     }
     
     _renderComplianceStatus(results) {

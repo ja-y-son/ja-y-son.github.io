@@ -146,6 +146,12 @@ sidebar-panel {
     color: var(--color-gray-190);
 }
 
+/* Reset Button */
+.reset-btn {
+    margin-top: var(--spacing-md);
+    width: 100%;
+}
+
 /* Compliance Status */
 .compliance-status {
     padding: var(--spacing-md);
