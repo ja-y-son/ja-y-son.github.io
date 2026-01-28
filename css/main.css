@@ -322,22 +322,69 @@ body {
    ================================ */
 @media (max-width: 1024px) {
     .planner-layout {
-        flex-direction: column-reverse;
+        flex-direction: column;
     }
     
     .sidebar-container {
         width: 100%;
         border-left: none;
         border-bottom: 1px solid var(--color-gray-30);
-        max-height: 200px;
+        max-height: none;
+        padding-bottom: var(--spacing-md);
+    }
+    
+    .calendar-container {
+        order: 2;
+    }
+    
+    .sidebar-container {
+        order: 1;
     }
 }
 
 @media (max-width: 768px) {
     :root {
         --sidebar-width: 100%;
+        --action-bar-height: 60px;
     }
     
+    .app-header h1 {
+        font-size: var(--font-size-lg);
+    }
+    
+    .planner-layout {
+        flex-direction: column;
+    }
+    
+    .sidebar-container {
+        position: relative;
+        max-height: none;
+        border-bottom: 1px solid var(--color-gray-30);
+    }
+    
+    .calendar-container {
+        padding: var(--spacing-md);
+    }
+    
+    /* Make sidebar content more compact on mobile */
+    .sidebar-content {
+        padding: var(--spacing-md);
+    }
+    
+    .sidebar-section {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    /* Stats grid single column on mobile */
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    /* Smaller window items */
+    .windows-list {
+        max-height: 150px;
+    }
+}
     .app-header h1 {
         font-size: var(--font-size-lg);
     }

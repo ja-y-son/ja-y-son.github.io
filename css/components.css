@@ -33,11 +33,13 @@ setup-form {
 
 .day-checkbox-group {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--spacing-sm);
 }
 
 .day-checkbox {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 60px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -349,4 +351,35 @@ day-cell {
 
 .empty-state-text {
     font-size: var(--font-size-base);
+}
+
+/* ================================
+   Responsive Styles
+   ================================ */
+@media (max-width: 480px) {
+    /* Setup form on small screens */
+    .setup-card {
+        padding: var(--spacing-md);
+    }
+    
+    .setup-title {
+        font-size: var(--font-size-xl);
+    }
+    
+    .day-checkbox-group {
+        gap: var(--spacing-xs);
+    }
+    
+    .day-checkbox {
+        min-width: 50px;
+        padding: var(--spacing-sm);
+    }
+    
+    .day-checkbox .day-abbr {
+        font-size: var(--font-size-base);
+    }
+    
+    .day-checkbox .day-full {
+        display: none;
+    }
 }
