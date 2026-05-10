@@ -145,6 +145,8 @@ export function setStorageAdapter(type) {
 // Initial State
 // ================================
 
+import { getDisplayRange, toMonthKey, generateDefaultOfficeDatesForMonths } from '../utils/date-utils.js';
+
 const initialState = {
     // Setup phase completed
     setupComplete: false,
@@ -155,8 +157,11 @@ const initialState = {
     // Org requirement (days per week)
     requiredDays: 3,
     
-    // Year being planned
-    year: new Date().getFullYear(),
+    // Rolling display range (computed on load, not persisted)
+    displayRange: getDisplayRange(),
+    
+    // Months that have been populated with defaults (persisted)
+    populatedMonths: [],
     
     // Confirmed office attendance dates (array of ISO date strings)
     confirmedDates: [],
@@ -190,7 +195,8 @@ class Store {
             ...this._state,
             confirmedDates: [...this._state.confirmedDates],
             pendingDates: [...this._state.pendingDates],
-            defaultOfficeDays: [...this._state.defaultOfficeDays]
+            defaultOfficeDays: [...this._state.defaultOfficeDays],
+            populatedMonths: [...this._state.populatedMonths]
         };
     }
     
@@ -240,7 +246,7 @@ class Store {
      * Reset state to initial
      */
     reset() {
-        this._state = { ...initialState, year: new Date().getFullYear() };
+        this._state = { ...initialState, displayRange: getDisplayRange() };
         storageAdapter.clear(STORAGE_KEY);
         this._notify({});
     }
@@ -315,12 +321,11 @@ class Store {
     }
     
     _saveToStorage() {
-        // Only save necessary state for persistence
         const persistedState = {
             setupComplete: this._state.setupComplete,
             defaultOfficeDays: this._state.defaultOfficeDays,
             requiredDays: this._state.requiredDays,
-            year: this._state.year,
+            populatedMonths: this._state.populatedMonths,
             confirmedDates: this._state.confirmedDates
         };
         storageAdapter.save(STORAGE_KEY, persistedState);
@@ -328,14 +333,52 @@ class Store {
     
     _loadFromStorage() {
         const saved = storageAdapter.load(STORAGE_KEY);
-        if (saved) {
-            this._state = {
-                ...this._state,
-                ...saved,
-                // Initialize pending to match confirmed
-                pendingDates: saved.confirmedDates || []
-            };
+        if (!saved) return;
+        
+        const displayRange = getDisplayRange();
+        
+        // Migrate from old year-based format
+        let populatedMonths = saved.populatedMonths;
+        if (!populatedMonths && saved.year) {
+            // Convert old format: all months of that year from policy start onward
+            populatedMonths = [];
+            for (let m = 0; m < 12; m++) {
+                populatedMonths.push(toMonthKey(saved.year, m));
+            }
         }
+        populatedMonths = populatedMonths || [];
+        
+        let confirmedDates = saved.confirmedDates || [];
+        
+        // Auto-populate new months that entered the display range
+        if (saved.setupComplete && saved.defaultOfficeDays && saved.defaultOfficeDays.length > 0) {
+            const populatedSet = new Set(populatedMonths);
+            const newMonths = displayRange.months.filter(
+                m => !populatedSet.has(toMonthKey(m.year, m.month))
+            );
+            
+            if (newMonths.length > 0) {
+                const newDates = generateDefaultOfficeDatesForMonths(newMonths, saved.defaultOfficeDays);
+                confirmedDates = [...confirmedDates, ...newDates];
+                for (const m of newMonths) {
+                    populatedMonths.push(toMonthKey(m.year, m.month));
+                }
+            }
+        }
+        
+        this._state = {
+            ...this._state,
+            setupComplete: saved.setupComplete || false,
+            defaultOfficeDays: saved.defaultOfficeDays || [],
+            requiredDays: saved.requiredDays || 3,
+            displayRange,
+            populatedMonths,
+            confirmedDates,
+            pendingDates: [...confirmedDates]
+        };
+        
+        // Re-persist with migrated data
+        this._saveToStorage();
     }
 }
 

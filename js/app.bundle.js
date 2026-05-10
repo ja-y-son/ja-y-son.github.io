@@ -1,203 +1,4 @@
 (() => {
-  // js/state/store.js
-  var SessionStorageAdapter = {
-    save(key, data) {
-      try {
-        sessionStorage.setItem(key, JSON.stringify(data));
-        return true;
-      } catch (e) {
-        console.error("SessionStorage save error:", e);
-        return false;
-      }
-    },
-    load(key) {
-      try {
-        const data = sessionStorage.getItem(key);
-        return data ? JSON.parse(data) : null;
-      } catch (e) {
-        console.error("SessionStorage load error:", e);
-        return null;
-      }
-    },
-    clear(key) {
-      try {
-        if (key) {
-          sessionStorage.removeItem(key);
-        } else {
-          sessionStorage.clear();
-        }
-        return true;
-      } catch (e) {
-        console.error("SessionStorage clear error:", e);
-        return false;
-      }
-    }
-  };
-  var STORAGE_KEY = "rto-planner-state";
-  var storageAdapter = SessionStorageAdapter;
-  var initialState = {
-    // Setup phase completed
-    setupComplete: false,
-    // User's typical office days (0 = Monday, 4 = Friday)
-    defaultOfficeDays: [],
-    // Org requirement (days per week)
-    requiredDays: 3,
-    // Year being planned
-    year: (/* @__PURE__ */ new Date()).getFullYear(),
-    // Confirmed office attendance dates (array of ISO date strings)
-    confirmedDates: [],
-    // Pending changes (array of ISO date strings)
-    pendingDates: [],
-    // Compliance results
-    complianceResults: null,
-    // Selected sliding window index (null = none selected)
-    selectedWindowIndex: null
-  };
-  var Store = class {
-    constructor() {
-      this._state = { ...initialState };
-      this._subscribers = /* @__PURE__ */ new Set();
-      this._loadFromStorage();
-    }
-    /**
-     * Get current state (returns a copy)
-     */
-    getState() {
-      return {
-        ...this._state,
-        confirmedDates: [...this._state.confirmedDates],
-        pendingDates: [...this._state.pendingDates],
-        defaultOfficeDays: [...this._state.defaultOfficeDays]
-      };
-    }
-    /**
-     * Get a specific value from state
-     */
-    get(key) {
-      const value = this._state[key];
-      if (Array.isArray(value)) {
-        return [...value];
-      }
-      if (value && typeof value === "object") {
-        return { ...value };
-      }
-      return value;
-    }
-    /**
-     * Update state
-     * @param {Partial<typeof initialState>} updates 
-     */
-    setState(updates) {
-      const prevState = this._state;
-      this._state = {
-        ...this._state,
-        ...updates
-      };
-      this._saveToStorage();
-      this._notify(prevState);
-    }
-    /**
-     * Subscribe to state changes
-     * @param {Function} callback 
-     * @returns {Function} Unsubscribe function
-     */
-    subscribe(callback) {
-      this._subscribers.add(callback);
-      return () => this._subscribers.delete(callback);
-    }
-    /**
-     * Reset state to initial
-     */
-    reset() {
-      this._state = { ...initialState, year: (/* @__PURE__ */ new Date()).getFullYear() };
-      storageAdapter.clear(STORAGE_KEY);
-      this._notify({});
-    }
-    /**
-     * Select a sliding window by index
-     * @param {number|null} index - Window index (0-based) or null to deselect
-     */
-    selectWindow(index) {
-      this.setState({ selectedWindowIndex: index });
-    }
-    /**
-     * Clear window selection
-     */
-    clearWindowSelection() {
-      this.setState({ selectedWindowIndex: null });
-    }
-    /**
-     * Check if there are pending changes
-     */
-    hasPendingChanges() {
-      const confirmed = new Set(this._state.confirmedDates);
-      const pending = new Set(this._state.pendingDates);
-      if (confirmed.size !== pending.size)
-        return true;
-      for (const date of confirmed) {
-        if (!pending.has(date))
-          return true;
-      }
-      return false;
-    }
-    /**
-     * Get pending changes details
-     */
-    getPendingChanges() {
-      const confirmed = new Set(this._state.confirmedDates);
-      const pending = new Set(this._state.pendingDates);
-      const added = [];
-      const removed = [];
-      for (const date of pending) {
-        if (!confirmed.has(date)) {
-          added.push(date);
-        }
-      }
-      for (const date of confirmed) {
-        if (!pending.has(date)) {
-          removed.push(date);
-        }
-      }
-      return { added, removed, total: added.length + removed.length };
-    }
-    // Private methods
-    _notify(prevState) {
-      const currentState = this.getState();
-      this._subscribers.forEach((callback) => {
-        try {
-          callback(currentState, prevState);
-        } catch (e) {
-          console.error("Store subscriber error:", e);
-        }
-      });
-    }
-    _saveToStorage() {
-      const persistedState = {
-        setupComplete: this._state.setupComplete,
-        defaultOfficeDays: this._state.defaultOfficeDays,
-        requiredDays: this._state.requiredDays,
-        year: this._state.year,
-        confirmedDates: this._state.confirmedDates
-      };
-      storageAdapter.save(STORAGE_KEY, persistedState);
-    }
-    _loadFromStorage() {
-      const saved = storageAdapter.load(STORAGE_KEY);
-      if (saved) {
-        this._state = {
-          ...this._state,
-          ...saved,
-          // Initialize pending to match confirmed
-          pendingDates: saved.confirmedDates || []
-        };
-      }
-    }
-  };
-  var store = new Store();
-  if (typeof window !== "undefined") {
-    window.__RTO_STORE__ = store;
-  }
-
   // js/utils/date-utils.js
   var DAY_ABBRS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   var WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
@@ -218,6 +19,7 @@
   ];
   var POLICY_START_DATE = "2026-01-26";
   var COMPANY_HOLIDAYS = {
+    // 2026
     "2026-02-16": "Presidents' Day",
     "2026-05-25": "Memorial Day",
     "2026-07-03": "Independence Day",
@@ -225,7 +27,18 @@
     "2026-11-26": "Thanksgiving Day",
     "2026-11-27": "Day after Thanksgiving",
     "2026-12-24": "Christmas Eve",
-    "2026-12-25": "Christmas Day"
+    "2026-12-25": "Christmas Day",
+    // 2027
+    "2027-01-01": "New Year's Day",
+    "2027-01-18": "Martin Luther King Jr. Day",
+    "2027-02-15": "Presidents' Day",
+    "2027-05-31": "Memorial Day",
+    "2027-07-05": "Independence Day (Observed)",
+    "2027-09-06": "Labor Day",
+    "2027-11-25": "Thanksgiving Day",
+    "2027-11-26": "Day after Thanksgiving",
+    "2027-12-24": "Christmas Eve",
+    "2027-12-25": "Christmas Day"
   };
   function isCompanyHoliday(isoString) {
     return isoString in COMPANY_HOLIDAYS;
@@ -317,25 +130,67 @@
     }
     return grid;
   }
-  function generateDefaultOfficeDates(year, daysOfWeek) {
-    const dates = [];
-    const date = new Date(year, 0, 1);
-    const daysSet = new Set(daysOfWeek);
-    while (date.getFullYear() === year) {
-      const dateStr = toISODateString(date);
-      const weekday = jsDateDayToWeekday(date.getDay());
-      if (daysSet.has(weekday) && dateStr >= POLICY_START_DATE && !isCompanyHoliday(dateStr)) {
-        dates.push(dateStr);
-      }
-      date.setDate(date.getDate() + 1);
-    }
-    return dates;
-  }
   function isToday(isoString) {
     return isoString === toISODateString(/* @__PURE__ */ new Date());
   }
   function isBeforePolicyStart(isoString) {
     return isoString < POLICY_START_DATE;
+  }
+  function getDisplayRange(today = /* @__PURE__ */ new Date()) {
+    const months = [];
+    const start = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+    const end = new Date(today.getFullYear(), today.getMonth() + 9, 1);
+    const current = new Date(start);
+    while (current < end) {
+      months.push({ year: current.getFullYear(), month: current.getMonth() });
+      current.setMonth(current.getMonth() + 1);
+    }
+    return {
+      months,
+      startYear: months[0].year,
+      endYear: months[months.length - 1].year
+    };
+  }
+  function toMonthKey(year, month) {
+    return `${year}-${String(month + 1).padStart(2, "0")}`;
+  }
+  function getWeeksInRange(rangeStart, rangeEnd) {
+    const weeks = [];
+    let current = getWeekStart(rangeStart);
+    const lastFriday = getWeekEnd(rangeEnd);
+    while (current <= lastFriday) {
+      weeks.push({
+        weekNumber: getISOWeekNumber(current),
+        weekYear: getISOWeekYear(current),
+        start: new Date(current),
+        end: getWeekEnd(current)
+      });
+      current.setDate(current.getDate() + 7);
+    }
+    return weeks;
+  }
+  function generateDefaultOfficeDatesForMonths(months, daysOfWeek) {
+    const dates = [];
+    const daysSet = new Set(daysOfWeek);
+    for (const { year, month } of months) {
+      const date = new Date(year, month, 1);
+      while (date.getMonth() === month && date.getFullYear() === year) {
+        const dateStr = toISODateString(date);
+        const weekday = jsDateDayToWeekday(date.getDay());
+        if (daysSet.has(weekday) && dateStr >= POLICY_START_DATE && !isCompanyHoliday(dateStr)) {
+          dates.push(dateStr);
+        }
+        date.setDate(date.getDate() + 1);
+      }
+    }
+    return dates;
+  }
+  function getHolidaysInRange(months) {
+    const monthKeys = new Set(months.map((m) => toMonthKey(m.year, m.month)));
+    return Object.entries(COMPANY_HOLIDAYS).filter(([dateStr]) => {
+      const key = dateStr.substring(0, 7);
+      return monthKeys.has(key);
+    }).map(([dateStr, name]) => ({ dateStr, name }));
   }
   function formatDateRange(start, end) {
     const startMonth = MONTH_NAMES[start.getMonth()].slice(0, 3);
@@ -349,11 +204,250 @@
     }
   }
 
+  // js/state/store.js
+  var SessionStorageAdapter = {
+    save(key, data) {
+      try {
+        sessionStorage.setItem(key, JSON.stringify(data));
+        return true;
+      } catch (e) {
+        console.error("SessionStorage save error:", e);
+        return false;
+      }
+    },
+    load(key) {
+      try {
+        const data = sessionStorage.getItem(key);
+        return data ? JSON.parse(data) : null;
+      } catch (e) {
+        console.error("SessionStorage load error:", e);
+        return null;
+      }
+    },
+    clear(key) {
+      try {
+        if (key) {
+          sessionStorage.removeItem(key);
+        } else {
+          sessionStorage.clear();
+        }
+        return true;
+      } catch (e) {
+        console.error("SessionStorage clear error:", e);
+        return false;
+      }
+    }
+  };
+  var STORAGE_KEY = "rto-planner-state";
+  var storageAdapter = SessionStorageAdapter;
+  var initialState = {
+    // Setup phase completed
+    setupComplete: false,
+    // User's typical office days (0 = Monday, 4 = Friday)
+    defaultOfficeDays: [],
+    // Org requirement (days per week)
+    requiredDays: 3,
+    // Rolling display range (computed on load, not persisted)
+    displayRange: getDisplayRange(),
+    // Months that have been populated with defaults (persisted)
+    populatedMonths: [],
+    // Confirmed office attendance dates (array of ISO date strings)
+    confirmedDates: [],
+    // Pending changes (array of ISO date strings)
+    pendingDates: [],
+    // Compliance results
+    complianceResults: null,
+    // Selected sliding window index (null = none selected)
+    selectedWindowIndex: null
+  };
+  var Store = class {
+    constructor() {
+      this._state = { ...initialState };
+      this._subscribers = /* @__PURE__ */ new Set();
+      this._loadFromStorage();
+    }
+    /**
+     * Get current state (returns a copy)
+     */
+    getState() {
+      return {
+        ...this._state,
+        confirmedDates: [...this._state.confirmedDates],
+        pendingDates: [...this._state.pendingDates],
+        defaultOfficeDays: [...this._state.defaultOfficeDays],
+        populatedMonths: [...this._state.populatedMonths]
+      };
+    }
+    /**
+     * Get a specific value from state
+     */
+    get(key) {
+      const value = this._state[key];
+      if (Array.isArray(value)) {
+        return [...value];
+      }
+      if (value && typeof value === "object") {
+        return { ...value };
+      }
+      return value;
+    }
+    /**
+     * Update state
+     * @param {Partial<typeof initialState>} updates 
+     */
+    setState(updates) {
+      const prevState = this._state;
+      this._state = {
+        ...this._state,
+        ...updates
+      };
+      this._saveToStorage();
+      this._notify(prevState);
+    }
+    /**
+     * Subscribe to state changes
+     * @param {Function} callback 
+     * @returns {Function} Unsubscribe function
+     */
+    subscribe(callback) {
+      this._subscribers.add(callback);
+      return () => this._subscribers.delete(callback);
+    }
+    /**
+     * Reset state to initial
+     */
+    reset() {
+      this._state = { ...initialState, displayRange: getDisplayRange() };
+      storageAdapter.clear(STORAGE_KEY);
+      this._notify({});
+    }
+    /**
+     * Select a sliding window by index
+     * @param {number|null} index - Window index (0-based) or null to deselect
+     */
+    selectWindow(index) {
+      this.setState({ selectedWindowIndex: index });
+    }
+    /**
+     * Clear window selection
+     */
+    clearWindowSelection() {
+      this.setState({ selectedWindowIndex: null });
+    }
+    /**
+     * Check if there are pending changes
+     */
+    hasPendingChanges() {
+      const confirmed = new Set(this._state.confirmedDates);
+      const pending = new Set(this._state.pendingDates);
+      if (confirmed.size !== pending.size)
+        return true;
+      for (const date of confirmed) {
+        if (!pending.has(date))
+          return true;
+      }
+      return false;
+    }
+    /**
+     * Get pending changes details
+     */
+    getPendingChanges() {
+      const confirmed = new Set(this._state.confirmedDates);
+      const pending = new Set(this._state.pendingDates);
+      const added = [];
+      const removed = [];
+      for (const date of pending) {
+        if (!confirmed.has(date)) {
+          added.push(date);
+        }
+      }
+      for (const date of confirmed) {
+        if (!pending.has(date)) {
+          removed.push(date);
+        }
+      }
+      return { added, removed, total: added.length + removed.length };
+    }
+    // Private methods
+    _notify(prevState) {
+      const currentState = this.getState();
+      this._subscribers.forEach((callback) => {
+        try {
+          callback(currentState, prevState);
+        } catch (e) {
+          console.error("Store subscriber error:", e);
+        }
+      });
+    }
+    _saveToStorage() {
+      const persistedState = {
+        setupComplete: this._state.setupComplete,
+        defaultOfficeDays: this._state.defaultOfficeDays,
+        requiredDays: this._state.requiredDays,
+        populatedMonths: this._state.populatedMonths,
+        confirmedDates: this._state.confirmedDates
+      };
+      storageAdapter.save(STORAGE_KEY, persistedState);
+    }
+    _loadFromStorage() {
+      const saved = storageAdapter.load(STORAGE_KEY);
+      if (!saved)
+        return;
+      const displayRange = getDisplayRange();
+      let populatedMonths = saved.populatedMonths;
+      if (!populatedMonths && saved.year) {
+        populatedMonths = [];
+        for (let m = 0; m < 12; m++) {
+          populatedMonths.push(toMonthKey(saved.year, m));
+        }
+      }
+      populatedMonths = populatedMonths || [];
+      let confirmedDates = saved.confirmedDates || [];
+      if (saved.setupComplete && saved.defaultOfficeDays && saved.defaultOfficeDays.length > 0) {
+        const populatedSet = new Set(populatedMonths);
+        const newMonths = displayRange.months.filter(
+          (m) => !populatedSet.has(toMonthKey(m.year, m.month))
+        );
+        if (newMonths.length > 0) {
+          const newDates = generateDefaultOfficeDatesForMonths(newMonths, saved.defaultOfficeDays);
+          confirmedDates = [...confirmedDates, ...newDates];
+          for (const m of newMonths) {
+            populatedMonths.push(toMonthKey(m.year, m.month));
+          }
+        }
+      }
+      this._state = {
+        ...this._state,
+        setupComplete: saved.setupComplete || false,
+        defaultOfficeDays: saved.defaultOfficeDays || [],
+        requiredDays: saved.requiredDays || 3,
+        displayRange,
+        populatedMonths,
+        confirmedDates,
+        pendingDates: [...confirmedDates]
+      };
+      this._saveToStorage();
+    }
+  };
+  var store = new Store();
+  if (typeof window !== "undefined") {
+    window.__RTO_STORE__ = store;
+  }
+
   // js/utils/compliance.js
-  function calculateWeeklyAttendance(year, selectedDates) {
+  function calculateWeeklyAttendance(year, selectedDates, displayRange) {
     const weeklyAttendance = /* @__PURE__ */ new Map();
     const selectedSet = new Set(selectedDates);
-    const weeks = getWeeksInYear(year);
+    let weeks;
+    if (displayRange) {
+      const months = displayRange.months;
+      const rangeStart = new Date(months[0].year, months[0].month, 1);
+      const lastMonth = months[months.length - 1];
+      const rangeEnd = new Date(lastMonth.year, lastMonth.month + 1, 0);
+      weeks = getWeeksInRange(rangeStart, rangeEnd);
+    } else {
+      weeks = getWeeksInYear(year);
+    }
     for (const week of weeks) {
       const weekStartKey = toISODateString(week.start);
       let count = 0;
@@ -384,19 +478,26 @@
     const rounded = policyRound(average);
     return { average, rounded, best8 };
   }
-  function calculateCompliance(year, selectedDates, requiredDays) {
-    const weeklyAttendance = calculateWeeklyAttendance(year, selectedDates);
-    const weeks = getWeeksInYear(year);
+  function calculateCompliance(year, selectedDates, requiredDays, displayRange) {
+    const weeklyAttendance = calculateWeeklyAttendance(year, selectedDates, displayRange);
+    let weeks;
+    if (displayRange) {
+      const months = displayRange.months;
+      const rangeStart = new Date(months[0].year, months[0].month, 1);
+      const lastMonth = months[months.length - 1];
+      const rangeEnd = new Date(lastMonth.year, lastMonth.month + 1, 0);
+      weeks = getWeeksInRange(rangeStart, rangeEnd);
+    } else {
+      weeks = getWeeksInYear(year);
+    }
     const policyStartWeekIndex = weeks.findIndex((w) => toISODateString(w.start) >= POLICY_START_DATE);
     if (policyStartWeekIndex === -1) {
       return {
-        year,
         requiredDays,
         totalWindows: 0,
         isCompliant: true,
         windows: [],
-        nonCompliantWindows: [],
-        stats: calculateStats(selectedDates, weeklyAttendance, year)
+        nonCompliantWindows: []
       };
     }
     const weekKeys = weeks.map((w) => toISODateString(w.start));
@@ -430,7 +531,6 @@
       }
     }
     return {
-      year,
       requiredDays,
       totalWindows: windows.length,
       isCompliant: nonCompliantWindows.length === 0,
@@ -832,7 +932,7 @@
     }
     _render() {
       const state = store.getState();
-      const year = state.year;
+      const displayRange = state.displayRange;
       this.innerHTML = `
             <div class="calendar-legend">
                 <div class="legend-item">
@@ -861,16 +961,14 @@
                 </div>
             </div>
             <div class="calendar-grid" id="calendarGrid">
-                ${this._renderMonths(year)}
+                ${this._renderMonths(displayRange)}
             </div>
         `;
     }
-    _renderMonths(year) {
-      let html = "";
-      for (let month = 0; month < 12; month++) {
-        html += `<month-calendar year="${year}" month="${month}"></month-calendar>`;
-      }
-      return html;
+    _renderMonths(displayRange) {
+      return displayRange.months.map(
+        (m) => `<month-calendar year="${m.year}" month="${m.month}"></month-calendar>`
+      ).join("");
     }
     _setupEventListeners() {
       this.addEventListener("day-toggle", (e) => {
@@ -1123,10 +1221,11 @@
       }).join("");
     }
     _renderHolidays() {
-      const holidays = Object.entries(COMPANY_HOLIDAYS).map(([dateStr, name]) => {
+      const state = store.getState();
+      const holidays = getHolidaysInRange(state.displayRange.months).map(({ dateStr, name }) => {
         const [year, month, day] = dateStr.split("-").map(Number);
         const monthName = MONTH_NAMES[month - 1].slice(0, 3);
-        return { dateStr, name, display: `${monthName} ${day}` };
+        return { dateStr, name, display: `${monthName} ${day}, ${year}` };
       });
       return `
             <section class="sidebar-section">
@@ -1213,9 +1312,10 @@
       const state = store.getState();
       const newConfirmedDates = [...state.pendingDates];
       const complianceResults = calculateCompliance(
-        state.year,
+        null,
         newConfirmedDates,
-        state.requiredDays
+        state.requiredDays,
+        state.displayRange
       );
       store.setState({
         confirmedDates: newConfirmedDates,
@@ -1251,7 +1351,12 @@
     }
     _initialize() {
       const state = store.getState();
-      this.yearBadge.textContent = state.year;
+      const dr = state.displayRange;
+      if (dr.startYear === dr.endYear) {
+        this.yearBadge.textContent = dr.startYear;
+      } else {
+        this.yearBadge.textContent = `${dr.startYear}\u2013${dr.endYear}`;
+      }
       if (state.setupComplete && state.confirmedDates.length > 0) {
         this._recalculateCompliance();
         this._showPlanner();
@@ -1271,9 +1376,10 @@
     _recalculateCompliance() {
       const state = store.getState();
       const complianceResults = calculateCompliance(
-        state.year,
+        null,
         state.confirmedDates,
-        state.requiredDays
+        state.requiredDays,
+        state.displayRange
       );
       store.setState({ complianceResults });
     }
@@ -1292,13 +1398,15 @@
     }
     _handleSetupComplete({ defaultOfficeDays, requiredDays }) {
       const state = store.getState();
-      const year = state.year;
-      const defaultDates = generateDefaultOfficeDates(year, defaultOfficeDays);
-      const complianceResults = calculateCompliance(year, defaultDates, requiredDays);
+      const displayRange = state.displayRange;
+      const defaultDates = generateDefaultOfficeDatesForMonths(displayRange.months, defaultOfficeDays);
+      const populatedMonths = displayRange.months.map((m) => toMonthKey(m.year, m.month));
+      const complianceResults = calculateCompliance(null, defaultDates, requiredDays, displayRange);
       store.setState({
         setupComplete: true,
         defaultOfficeDays,
         requiredDays,
+        populatedMonths,
         confirmedDates: defaultDates,
         pendingDates: defaultDates,
         complianceResults

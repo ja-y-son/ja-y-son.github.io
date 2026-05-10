@@ -90,9 +90,10 @@ export class ActionBar extends HTMLElement {
         
         // Calculate compliance with new dates
         const complianceResults = calculateCompliance(
-            state.year,
+            null,
             newConfirmedDates,
-            state.requiredDays
+            state.requiredDays,
+            state.displayRange
         );
         
         // Update store

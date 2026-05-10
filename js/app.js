@@ -7,7 +7,7 @@
  */
 
 import { store } from './state/store.js';
-import { generateDefaultOfficeDates } from './utils/date-utils.js';
+import { generateDefaultOfficeDatesForMonths, toMonthKey } from './utils/date-utils.js';
 import { calculateCompliance } from './utils/compliance.js';
 
 // Import all components
@@ -26,9 +26,14 @@ class RTOPlannerApp {
     }
     
     _initialize() {
-        // Update year badge
+        // Update year badge to show range
         const state = store.getState();
-        this.yearBadge.textContent = state.year;
+        const dr = state.displayRange;
+        if (dr.startYear === dr.endYear) {
+            this.yearBadge.textContent = dr.startYear;
+        } else {
+            this.yearBadge.textContent = `${dr.startYear}–${dr.endYear}`;
+        }
         
         // Check if setup is already complete (from storage)
         if (state.setupComplete && state.confirmedDates.length > 0) {
@@ -58,9 +63,10 @@ class RTOPlannerApp {
     _recalculateCompliance() {
         const state = store.getState();
         const complianceResults = calculateCompliance(
-            state.year,
+            null,
             state.confirmedDates,
-            state.requiredDays
+            state.requiredDays,
+            state.displayRange
         );
         store.setState({ complianceResults });
     }
@@ -84,19 +90,23 @@ class RTOPlannerApp {
     
     _handleSetupComplete({ defaultOfficeDays, requiredDays }) {
         const state = store.getState();
-        const year = state.year;
+        const displayRange = state.displayRange;
         
-        // Generate default office dates for the year
-        const defaultDates = generateDefaultOfficeDates(year, defaultOfficeDays);
+        // Generate default office dates for the display range
+        const defaultDates = generateDefaultOfficeDatesForMonths(displayRange.months, defaultOfficeDays);
+        
+        // Track which months are now populated
+        const populatedMonths = displayRange.months.map(m => toMonthKey(m.year, m.month));
         
         // Calculate initial compliance
-        const complianceResults = calculateCompliance(year, defaultDates, requiredDays);
+        const complianceResults = calculateCompliance(null, defaultDates, requiredDays, displayRange);
         
         // Update store with all setup data
         store.setState({
             setupComplete: true,
             defaultOfficeDays,
             requiredDays,
+            populatedMonths,
             confirmedDates: defaultDates,
             pendingDates: defaultDates,
             complianceResults

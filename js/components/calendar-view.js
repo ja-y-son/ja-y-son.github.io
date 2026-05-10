@@ -34,7 +34,7 @@ export class CalendarView extends HTMLElement {
     
     _render() {
         const state = store.getState();
-        const year = state.year;
+        const displayRange = state.displayRange;
         
         this.innerHTML = `
             <div class="calendar-legend">
@@ -64,17 +64,15 @@ export class CalendarView extends HTMLElement {
                 </div>
             </div>
             <div class="calendar-grid" id="calendarGrid">
-                ${this._renderMonths(year)}
+                ${this._renderMonths(displayRange)}
             </div>
         `;
     }
     
-    _renderMonths(year) {
-        let html = '';
-        for (let month = 0; month < 12; month++) {
-            html += `<month-calendar year="${year}" month="${month}"></month-calendar>`;
-        }
-        return html;
+    _renderMonths(displayRange) {
+        return displayRange.months.map(
+            m => `<month-calendar year="${m.year}" month="${m.month}"></month-calendar>`
+        ).join('');
     }
     
     _setupEventListeners() {

@@ -9,7 +9,7 @@
  */
 
 import { store } from '../state/store.js';
-import { WEEKDAY_ABBRS, COMPANY_HOLIDAYS, MONTH_NAMES } from '../utils/date-utils.js';
+import { WEEKDAY_ABBRS, MONTH_NAMES, getHolidaysInRange } from '../utils/date-utils.js';
 import { formatWindowForDisplay } from '../utils/compliance.js';
 
 export class SidebarPanel extends HTMLElement {
@@ -257,10 +257,11 @@ export class SidebarPanel extends HTMLElement {
     }
     
     _renderHolidays() {
-        const holidays = Object.entries(COMPANY_HOLIDAYS).map(([dateStr, name]) => {
+        const state = store.getState();
+        const holidays = getHolidaysInRange(state.displayRange.months).map(({ dateStr, name }) => {
             const [year, month, day] = dateStr.split('-').map(Number);
             const monthName = MONTH_NAMES[month - 1].slice(0, 3);
-            return { dateStr, name, display: `${monthName} ${day}` };
+            return { dateStr, name, display: `${monthName} ${day}, ${year}` };
         });
         
         return `

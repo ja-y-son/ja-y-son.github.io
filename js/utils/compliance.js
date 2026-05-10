@@ -7,6 +7,7 @@
 
 import { 
     getWeeksInYear, 
+    getWeeksInRange,
     parseISODateString, 
     getWeekStart, 
     toISODateString,
@@ -15,17 +16,27 @@ import {
 } from './date-utils.js';
 
 /**
- * Calculate weekly attendance from selected dates
- * @param {number} year 
+ * Calculate weekly attendance from selected dates.
+ * Accepts either a year (legacy) or a displayRange.
+ * @param {number|null} year - Single year (legacy) or null if using displayRange
  * @param {string[]} selectedDates - Array of ISO date strings
+ * @param {object} [displayRange] - { months: [{year, month}, ...] }
  * @returns {Map<string, number>} Map of week start date to attendance count
  */
-export function calculateWeeklyAttendance(year, selectedDates) {
+export function calculateWeeklyAttendance(year, selectedDates, displayRange) {
     const weeklyAttendance = new Map();
     const selectedSet = new Set(selectedDates);
     
-    // Get all weeks in the year
-    const weeks = getWeeksInYear(year);
+    let weeks;
+    if (displayRange) {
+        const months = displayRange.months;
+        const rangeStart = new Date(months[0].year, months[0].month, 1);
+        const lastMonth = months[months.length - 1];
+        const rangeEnd = new Date(lastMonth.year, lastMonth.month + 1, 0);
+        weeks = getWeeksInRange(rangeStart, rangeEnd);
+    } else {
+        weeks = getWeeksInYear(year);
+    }
     
     for (const week of weeks) {
         const weekStartKey = toISODateString(week.start);
@@ -85,29 +96,39 @@ export function calculateWindowResult(weeklyValues) {
 }
 
 /**
- * Calculate compliance for all 12-week sliding windows in a year
- * @param {number} year 
+ * Calculate compliance for all 12-week sliding windows.
+ * Supports either a single year (legacy) or a displayRange.
+ * @param {number|null} year - Single year (legacy) or null if using displayRange
  * @param {string[]} selectedDates - Array of ISO date strings
  * @param {number} requiredDays - Org requirement (days per week)
+ * @param {object} [displayRange] - { months: [{year, month}, ...] }
  * @returns {ComplianceResult}
  */
-export function calculateCompliance(year, selectedDates, requiredDays) {
-    const weeklyAttendance = calculateWeeklyAttendance(year, selectedDates);
-    const weeks = getWeeksInYear(year);
+export function calculateCompliance(year, selectedDates, requiredDays, displayRange) {
+    const weeklyAttendance = calculateWeeklyAttendance(year, selectedDates, displayRange);
+    
+    let weeks;
+    if (displayRange) {
+        const months = displayRange.months;
+        const rangeStart = new Date(months[0].year, months[0].month, 1);
+        const lastMonth = months[months.length - 1];
+        const rangeEnd = new Date(lastMonth.year, lastMonth.month + 1, 0);
+        weeks = getWeeksInRange(rangeStart, rangeEnd);
+    } else {
+        weeks = getWeeksInYear(year);
+    }
     
     // Find the first week that starts on or after policy start date
     const policyStartWeekIndex = weeks.findIndex(w => toISODateString(w.start) >= POLICY_START_DATE);
     
-    // If policy hasn't started yet in this year, return empty results
+    // If policy hasn't started yet in this range, return empty results
     if (policyStartWeekIndex === -1) {
         return {
-            year,
             requiredDays,
             totalWindows: 0,
             isCompliant: true,
             windows: [],
-            nonCompliantWindows: [],
-            stats: calculateStats(selectedDates, weeklyAttendance, year)
+            nonCompliantWindows: []
         };
     }
     
@@ -152,7 +173,6 @@ export function calculateCompliance(year, selectedDates, requiredDays) {
     }
     
     return {
-        year,
         requiredDays,
         totalWindows: windows.length,
         isCompliant: nonCompliantWindows.length === 0,

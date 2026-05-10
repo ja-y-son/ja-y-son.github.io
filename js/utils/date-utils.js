@@ -33,10 +33,10 @@ export const MONTH_NAMES = [
 
 // RTO Policy enforcement start date
 export const POLICY_START_DATE = '2026-01-26';
-export const POLICY_START_WEEK_START = '2026-01-26'; // Monday of policy start week
 
-// Company Holidays for 2026 (date string -> holiday name)
+// Company Holidays (date string -> holiday name)
 export const COMPANY_HOLIDAYS = {
+    // 2026
     '2026-02-16': "Presidents' Day",
     '2026-05-25': 'Memorial Day',
     '2026-07-03': 'Independence Day',
@@ -44,7 +44,18 @@ export const COMPANY_HOLIDAYS = {
     '2026-11-26': 'Thanksgiving Day',
     '2026-11-27': 'Day after Thanksgiving',
     '2026-12-24': 'Christmas Eve',
-    '2026-12-25': 'Christmas Day'
+    '2026-12-25': 'Christmas Day',
+    // 2027
+    '2027-01-01': "New Year's Day",
+    '2027-01-18': "Martin Luther King Jr. Day",
+    '2027-02-15': "Presidents' Day",
+    '2027-05-31': 'Memorial Day',
+    '2027-07-05': 'Independence Day (Observed)',
+    '2027-09-06': 'Labor Day',
+    '2027-11-25': 'Thanksgiving Day',
+    '2027-11-26': 'Day after Thanksgiving',
+    '2027-12-24': 'Christmas Eve',
+    '2027-12-25': 'Christmas Day'
 };
 
 /**
@@ -346,6 +357,104 @@ export function isToday(isoString) {
  */
 export function isBeforePolicyStart(isoString) {
     return isoString < POLICY_START_DATE;
+}
+
+/**
+ * Compute the rolling display range: 3 months back + 9 months forward from today.
+ * @param {Date} [today] - Override for testing; defaults to now
+ * @returns {{months: Array<{year: number, month: number}>, startYear: number, endYear: number}}
+ */
+export function getDisplayRange(today = new Date()) {
+    const months = [];
+    const start = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+    const end = new Date(today.getFullYear(), today.getMonth() + 9, 1);
+    
+    const current = new Date(start);
+    while (current < end) {
+        months.push({ year: current.getFullYear(), month: current.getMonth() });
+        current.setMonth(current.getMonth() + 1);
+    }
+    
+    return {
+        months,
+        startYear: months[0].year,
+        endYear: months[months.length - 1].year
+    };
+}
+
+/**
+ * Get month key string for a year/month pair (e.g. "2026-05")
+ * @param {number} year
+ * @param {number} month (0-11)
+ * @returns {string}
+ */
+export function toMonthKey(year, month) {
+    return `${year}-${String(month + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Get all weeks that overlap a date range (by first/last day of range).
+ * Returns weeks from the Monday on or before rangeStart through the week containing rangeEnd.
+ * @param {Date} rangeStart
+ * @param {Date} rangeEnd
+ * @returns {Array<{weekNumber: number, weekYear: number, start: Date, end: Date}>}
+ */
+export function getWeeksInRange(rangeStart, rangeEnd) {
+    const weeks = [];
+    let current = getWeekStart(rangeStart);
+    const lastFriday = getWeekEnd(rangeEnd);
+    
+    while (current <= lastFriday) {
+        weeks.push({
+            weekNumber: getISOWeekNumber(current),
+            weekYear: getISOWeekYear(current),
+            start: new Date(current),
+            end: getWeekEnd(current)
+        });
+        current.setDate(current.getDate() + 7);
+    }
+    
+    return weeks;
+}
+
+/**
+ * Generate default office dates for a specific set of months.
+ * @param {Array<{year: number, month: number}>} months
+ * @param {number[]} daysOfWeek - Array of weekdays (0=Monday, 4=Friday)
+ * @returns {string[]} Array of ISO date strings
+ */
+export function generateDefaultOfficeDatesForMonths(months, daysOfWeek) {
+    const dates = [];
+    const daysSet = new Set(daysOfWeek);
+    
+    for (const { year, month } of months) {
+        const date = new Date(year, month, 1);
+        while (date.getMonth() === month && date.getFullYear() === year) {
+            const dateStr = toISODateString(date);
+            const weekday = jsDateDayToWeekday(date.getDay());
+            if (daysSet.has(weekday) && dateStr >= POLICY_START_DATE && !isCompanyHoliday(dateStr)) {
+                dates.push(dateStr);
+            }
+            date.setDate(date.getDate() + 1);
+        }
+    }
+    
+    return dates;
+}
+
+/**
+ * Get holidays within a display range
+ * @param {Array<{year: number, month: number}>} months
+ * @returns {Array<{dateStr: string, name: string}>}
+ */
+export function getHolidaysInRange(months) {
+    const monthKeys = new Set(months.map(m => toMonthKey(m.year, m.month)));
+    return Object.entries(COMPANY_HOLIDAYS)
+        .filter(([dateStr]) => {
+            const key = dateStr.substring(0, 7); // "YYYY-MM"
+            return monthKeys.has(key);
+        })
+        .map(([dateStr, name]) => ({ dateStr, name }));
 }
 
 /**
