@@ -38,7 +38,17 @@
     "2027-11-25": "Thanksgiving Day",
     "2027-11-26": "Day after Thanksgiving",
     "2027-12-24": "Christmas Eve",
-    "2027-12-25": "Christmas Day"
+    "2027-12-25": "Christmas Day",
+    // 2028
+    "2028-01-17": "Martin Luther King Jr. Day",
+    "2028-02-21": "Presidents' Day",
+    "2028-05-29": "Memorial Day",
+    "2028-07-04": "Independence Day",
+    "2028-09-04": "Labor Day",
+    "2028-11-23": "Thanksgiving Day",
+    "2028-11-24": "Day after Thanksgiving",
+    "2028-12-25": "Christmas Day",
+    "2028-12-26": "Day after Christmas"
   };
   function isCompanyHoliday(isoString) {
     return isoString in COMPANY_HOLIDAYS;
@@ -139,7 +149,7 @@
   function getDisplayRange(today = /* @__PURE__ */ new Date()) {
     const months = [];
     const start = new Date(today.getFullYear(), today.getMonth() - 3, 1);
-    const end = new Date(today.getFullYear(), today.getMonth() + 9, 1);
+    const end = new Date(today.getFullYear(), today.getMonth() + 13, 1);
     const current = new Date(start);
     while (current < end) {
       months.push({ year: current.getFullYear(), month: current.getMonth() });
